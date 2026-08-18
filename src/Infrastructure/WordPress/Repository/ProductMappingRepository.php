@@ -108,6 +108,37 @@ final class ProductMappingRepository
 		return is_array($rows) ? $rows : [];
 	}
 
+	public function count_active(): int
+	{
+		return (int) $this->wpdb->get_var($this->wpdb->prepare(
+			"SELECT COUNT(*) FROM {$this->table} WHERE mapping_status = %s",
+			MappingStatus::ACTIVE
+		));
+	}
+
+	/**
+	 * Keyset pagination avoids increasingly expensive OFFSET scans and does not
+	 * impose an arbitrary catalog-size ceiling on inventory reconciliation.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function find_active_after_id(int $limit = 500, int $after_id = 0): array
+	{
+		$limit = max(1, min($limit, 5000));
+		$after_id = max(0, $after_id);
+		$rows = $this->wpdb->get_results(
+			$this->wpdb->prepare(
+				"SELECT * FROM {$this->table} WHERE mapping_status = %s AND id > %d ORDER BY id ASC LIMIT %d",
+				MappingStatus::ACTIVE,
+				$after_id,
+				$limit
+			),
+			ARRAY_A
+		);
+
+		return is_array($rows) ? $rows : [];
+	}
+
 	/**
 	 * @return array<int, array<string, mixed>>
 	 */

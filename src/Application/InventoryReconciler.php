@@ -9,7 +9,6 @@ namespace WooSapoSync\Application;
 
 use WooSapoSync\Contracts\SapoGateway;
 use WooSapoSync\Domain\Inventory\StockAvailabilityCalculator;
-use WooSapoSync\Domain\Product\MappingStatus;
 use WooSapoSync\Infrastructure\WordPress\InventoryLocationPolicy;
 use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
 use WooSapoSync\Infrastructure\WooCommerce\ProductStockUpdater;
@@ -36,17 +35,10 @@ final class InventoryReconciler
 	 */
 	public function sync(bool $shadow = true): array
 	{
-		$active = [];
-		for ($offset = 0; $offset < 50000; $offset += 500) {
-			$page = $this->mappings->find_active(500, $offset);
-			$active = array_merge($active, $page);
-			if (count($page) < 500) {
-				break;
-			}
-		}
-		$active = array_values(array_filter($active, static fn (array $mapping): bool => MappingStatus::ACTIVE === ($mapping['mapping_status'] ?? '')));
-		if ([] === $active) {
-			return ['mode' => $shadow ? 'shadow' : 'write', 'mapped' => 0, 'updated' => 0, 'differences' => 0, 'errors' => []];
+		$active_count = $this->mappings->count_active();
+		$mode = $shadow ? 'shadow' : 'write';
+		if (0 === $active_count) {
+			return ['mode' => $mode, 'mapped' => 0, 'updated' => 0, 'differences' => 0, 'errors' => []];
 		}
 
 		$remote_location_items = [];
@@ -69,7 +61,7 @@ final class InventoryReconciler
 		}
 		$locations = InventoryLocationPolicy::resolve($remote_location_items);
 		$eligible_locations = array_values(array_filter($locations, static fn (array $location): bool => ! empty($location['serves'])));
-		$report = ['mode' => $shadow ? 'shadow' : 'write', 'mapped' => count($active), 'updated' => 0, 'differences' => 0, 'errors' => []];
+		$report = ['mode' => $mode, 'mapped' => $active_count, 'updated' => 0, 'differences' => 0, 'errors' => []];
 		if ([] === $eligible_locations) {
 			$report['errors'][] = 'NO_ELIGIBLE_LOCATIONS';
 			return $report;
@@ -77,9 +69,20 @@ final class InventoryReconciler
 
 		$location_ids = array_values(array_unique(array_map(static fn (array $location): string => $location['id'], $eligible_locations)));
 
-		// Keep each remote request bounded. The gateway also chunks its query, but
-		// batching here limits memory and lets a large catalog make incremental progress.
-		foreach (array_chunk($active, 500) as $batch) {
+		// Keep each remote request bounded. Keyset pagination avoids loading the
+		// complete mapping table into PHP memory before the first stock update.
+		$last_mapping_id = 0;
+		while (true) {
+			$batch = $this->mappings->find_active_after_id(500, $last_mapping_id);
+			if ([] === $batch) {
+				break;
+			}
+			$next_mapping_id = (int) ($batch[count($batch) - 1]['id'] ?? 0);
+			if ($next_mapping_id <= $last_mapping_id) {
+				$report['errors'][] = 'MAPPING_PAGINATION_STALLED';
+				break;
+			}
+			$last_mapping_id = $next_mapping_id;
 			$variant_ids = array_values(array_unique(array_map(static fn (array $mapping): string => (string) $mapping['sapo_variant_id'], $batch)));
 			$availability = $this->gateway->get_availability($variant_ids, $location_ids);
 			$calculated = StockAvailabilityCalculator::calculate($eligible_locations, $availability);
