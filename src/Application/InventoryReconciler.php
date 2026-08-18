@@ -17,6 +17,8 @@ use WooSapoSync\Infrastructure\WooCommerce\ProductStockUpdater;
 
 defined('ABSPATH') || exit;
 
+/* phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages and normalized error codes are logged, not rendered as browser output. */
+
 final class InventoryReconciler
 {
 	private const MAX_LOCATION_PAGES = 100;
