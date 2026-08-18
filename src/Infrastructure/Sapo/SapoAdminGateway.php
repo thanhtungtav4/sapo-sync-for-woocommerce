@@ -247,10 +247,12 @@ final class SapoAdminGateway implements SapoGateway
 			$created = $this->request_object('POST', '/admin/orders.json', 'order contract create', $payload);
 			$order = ResponseValidator::object($created['order'] ?? null, 'order contract create');
 			$order_id = trim((string) ($order['id'] ?? ''));
-			if ('' === $order_id || empty($order['confirmed']) || '' === trim((string) ($order['processed_on'] ?? ''))) {
+			$order_status = strtolower(trim((string) ($order['status'] ?? '')));
+			$accepted = ! empty($order['confirmed']) || in_array($order_status, ['open', 'processing', 'approved'], true);
+			if ('' === $order_id || ! $accepted || '' === trim((string) ($order['processed_on'] ?? ''))) {
 				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(
 					ErrorCode::VALIDATION,
-					'Order contract create did not return a confirmed and processed order.',
+					'Order contract create did not return an accepted and processed order.',
 					[
 						'order_id' => $order_id,
 						'confirmed' => ! empty($order['confirmed']),
