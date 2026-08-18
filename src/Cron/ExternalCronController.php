@@ -107,8 +107,11 @@ final class ExternalCronController
 
 		$started_at = microtime(true);
 		try {
+			/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
 			do_action(Scheduler::EVENT_SWEEP_HOOK);
+			/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
 			do_action(Scheduler::INVENTORY_HOOK);
+			/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
 			do_action(Scheduler::MAPPING_HOOK);
 
 			$queue_runner = false;
@@ -119,6 +122,7 @@ final class ExternalCronController
 			if (function_exists('as_enqueue_async_action')) {
 				// Action Scheduler's runner is normally invoked by WP-Cron. Calling
 				// its public hook here also supports DISABLE_WP_CRON installations.
+				/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This is Action Scheduler's public vendor hook. */
 				do_action('action_scheduler_run_queue');
 				$queue_runner = true;
 			}
