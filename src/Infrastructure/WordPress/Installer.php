@@ -9,6 +9,8 @@ namespace WooSapoSync\Infrastructure\WordPress;
 
 defined('ABSPATH') || exit;
 
+/* phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Plugin-owned tables are created/migrated with dbDelta and internal identifiers derived from $wpdb->prefix; schema identifiers cannot be placeholders. */
+
 final class Installer
 {
 	public const DB_VERSION = '1.2.0';

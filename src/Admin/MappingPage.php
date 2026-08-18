@@ -58,8 +58,11 @@ final class MappingPage
 
 		global $wpdb;
 		$repository = new ProductMappingRepository($wpdb);
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list filter; the mapping mutation below uses a nonce-protected POST. */
 		$search = isset($_GET['s']) ? sanitize_text_field(wp_unslash((string) $_GET['s'])) : '';
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list filter; the mapping mutation below uses a nonce-protected POST. */
 		$status = isset($_GET['mapping_status']) ? sanitize_key((string) $_GET['mapping_status']) : '';
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination value; the mapping mutation below uses a nonce-protected POST. */
 		$page = max(1, absint($_GET['paged'] ?? 1));
 		$per_page = 50;
 		$total = $repository->count($search, $status);
@@ -80,9 +83,11 @@ final class MappingPage
 				</select>
 				<?php submit_button(__('Lọc', 'sapo-sync-for-woocommerce'), 'secondary', '', false); ?>
 			</form>
-			<?php if (isset($_GET['mapping_saved'])) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php echo esc_html__('Mapping đã được cập nhật.', 'sapo-sync-for-woocommerce'); ?></p></div>
-			<?php elseif (isset($_GET['mapping_error'])) : ?>
+		<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
+		<?php if (isset($_GET['mapping_saved'])) : ?>
+			<div class="notice notice-success is-dismissible"><p><?php echo esc_html__('Mapping đã được cập nhật.', 'sapo-sync-for-woocommerce'); ?></p></div>
+		<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
+		<?php elseif (isset($_GET['mapping_error'])) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html__('Không thể cập nhật mapping; kiểm tra ID hoặc mapping trùng.', 'sapo-sync-for-woocommerce'); ?></p></div>
 			<?php endif; ?>
 			<?php /* translators: %d: number of product mappings. */ ?>

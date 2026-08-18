@@ -63,8 +63,10 @@ final class CapabilityPage
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__('Sapo Sync for WooCommerce', 'sapo-sync-for-woocommerce'); ?></h1>
+			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
 			<?php if (isset($_GET['woo_sapo_order_verified'])) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html__('Order contract smoke test thành công: đã tạo và hủy order test, capability ghi đơn đã được mở cho connection hiện tại.', 'sapo-sync-for-woocommerce'); ?></p></div>
+			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
 			<?php elseif (isset($_GET['woo_sapo_order_verify_error'])) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html__('Order contract smoke test thất bại. Capability ghi đơn vẫn bị khóa; kiểm tra quyền Order và log Sapo.', 'sapo-sync-for-woocommerce'); ?></p></div>
 			<?php endif; ?>

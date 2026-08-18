@@ -9,6 +9,8 @@ namespace WooSapoSync\Admin;
 
 defined('ABSPATH') || exit;
 
+/* phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- This read-only dashboard queries plugin-owned custom tables; table identifiers are derived from $wpdb->prefix and cannot be placeholders. */
+
 final class OperationsPage
 {
 	private static bool $registered = false;

@@ -13,7 +13,7 @@ use WooSapoSync\Domain\Product\ProductType;
 
 defined('ABSPATH') || exit;
 
-/* phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Internal table names are derived from $wpdb->prefix; value arguments are passed to prepare(). */
+/* phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Internal custom-table reads/writes are required for SKU mappings; table names are derived from $wpdb->prefix and value arguments are passed to prepare(). */
 
 final class ProductMappingRepository
 {

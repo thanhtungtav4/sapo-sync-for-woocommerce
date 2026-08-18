@@ -11,7 +11,9 @@
 
 defined('WP_UNINSTALL_PLUGIN') || exit;
 
-$option_names = [
+/* phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Deletion is limited to plugin-owned tables/options/meta during uninstall; identifiers are built from the trusted WordPress prefix. */
+
+$woo_sapo_option_names = [
 	'woo_sapo_sync_connection',
 	'woo_sapo_sync_settings',
 	'woo_sapo_sync_capabilities',
@@ -29,14 +31,14 @@ $option_names = [
 	'pixelcam_sapo_sync_location_policy',
 ];
 
-foreach ($option_names as $option_name) {
-	delete_option($option_name);
+foreach ($woo_sapo_option_names as $woo_sapo_option_name) {
+	delete_option($woo_sapo_option_name);
 }
 
 global $wpdb;
 
 if (isset($wpdb) && is_object($wpdb)) {
-	$table_suffixes = [
+	$woo_sapo_table_suffixes = [
 		'wss_sapo_product_mappings',
 		'wss_sapo_sync_operations',
 		'wss_sapo_events',
@@ -45,12 +47,12 @@ if (isset($wpdb) && is_object($wpdb)) {
 		'pxc_sapo_events',
 	];
 
-	foreach ($table_suffixes as $table_suffix) {
-		$table_name = $wpdb->prefix . $table_suffix;
-		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $table_name));
+	foreach ($woo_sapo_table_suffixes as $woo_sapo_table_suffix) {
+		$woo_sapo_table_name = $wpdb->prefix . $woo_sapo_table_suffix;
+		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $woo_sapo_table_name));
 	}
 
-	$meta_keys = [
+	$woo_sapo_meta_keys = [
 		'_woo_sapo_assigned_location',
 		'_woo_sapo_location_error',
 		'_woo_sapo_order_id',
@@ -61,9 +63,10 @@ if (isset($wpdb) && is_object($wpdb)) {
 		'_pixelcam_sapo_order_id',
 		'_pixelcam_sapo_remote_modified_at',
 	];
-	$placeholders = implode(', ', array_fill(0, count($meta_keys), '%s'));
+	$woo_sapo_placeholders = implode(', ', array_fill(0, count($woo_sapo_meta_keys), '%s'));
 	$wpdb->query($wpdb->prepare(
-		"DELETE FROM {$wpdb->postmeta} WHERE meta_key IN ({$placeholders})",
-		...$meta_keys
+		"DELETE FROM %i WHERE meta_key IN ({$woo_sapo_placeholders})",
+		$wpdb->postmeta,
+		...$woo_sapo_meta_keys
 	));
 }
