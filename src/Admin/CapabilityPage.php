@@ -75,6 +75,10 @@ final class CapabilityPage
 			<?php elseif (isset($_GET['woo_sapo_order_verify_error'])) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html__('Order contract smoke test thất bại. Capability ghi đơn vẫn bị khóa; kiểm tra quyền Order và log Sapo.', 'sapo-sync-for-woocommerce'); ?></p></div>
 			<?php endif; ?>
+			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
+			<?php if (isset($_GET['woo_sapo_error_code'])) : ?>
+				<div class="notice notice-warning is-dismissible"><p><?php echo esc_html(sprintf(__('Mã lỗi kết nối Sapo: %s. Đây là mã chẩn đoán, không phải credential.', 'sapo-sync-for-woocommerce'), sanitize_key((string) wp_unslash($_GET['woo_sapo_error_code'])))); ?></p></div>
+			<?php endif; ?>
 			<div class="notice <?php echo $passed ? 'notice-success' : ($connection_configured ? 'notice-info' : 'notice-warning'); ?> inline">
 				<p>
 				<?php
@@ -324,8 +328,12 @@ final class CapabilityPage
 		}
 
 		check_admin_referer('woo_sapo_verify_capabilities');
-		CapabilityVerifier::verify(GatewayFactory::make());
-		$redirect = add_query_arg(['page' => 'sapo-sync-for-woocommerce', 'woo_sapo_verified' => '1'], admin_url('admin.php'));
+		$result = CapabilityVerifier::verify(GatewayFactory::make());
+		$query = ['page' => 'sapo-sync-for-woocommerce', 'woo_sapo_verified' => '1'];
+		if (! $result['connection_ok'] && '' !== $result['error_code']) {
+			$query['woo_sapo_error_code'] = $result['error_code'];
+		}
+		$redirect = add_query_arg($query, admin_url('admin.php'));
 		wp_safe_redirect($redirect);
 		exit;
 	}

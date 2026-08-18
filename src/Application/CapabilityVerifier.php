@@ -18,7 +18,7 @@ final class CapabilityVerifier
 	}
 
 	/**
-	 * @return array{connection_ok: bool, verified: int, missing: int, message: string}
+	 * @return array{connection_ok: bool, verified: int, missing: int, message: string, error_code: string}
 	 */
 	public static function verify(SapoGateway $gateway): array
 	{
@@ -42,6 +42,7 @@ final class CapabilityVerifier
 			'verified' => $verified,
 			'missing' => $missing,
 			'message' => $connection->message,
+			'error_code' => (string) ($connection->details['error_code'] ?? ''),
 		];
 	}
 }
