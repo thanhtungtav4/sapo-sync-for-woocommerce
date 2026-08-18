@@ -79,7 +79,7 @@ final class Scheduler
 	{
 		$schedules['woo_sapo_one_minute'] = [
 			'interval' => self::INTERVAL,
-			'display' => __('Mỗi phút — Sapo Sync for WooCommerce', 'sapo-sync-for-woocommerce'),
+			'display' => __('Mỗi phút — Inventory Bridge for Sapo', 'sapo-sync-for-woocommerce'),
 		];
 		return $schedules;
 	}

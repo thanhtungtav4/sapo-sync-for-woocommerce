@@ -136,7 +136,7 @@ final class Plugin
 
 		printf(
 			'<div class="notice notice-warning"><p>%s</p></div>',
-			esc_html__('Sapo Sync for WooCommerce cần WooCommerce được kích hoạt.', 'sapo-sync-for-woocommerce')
+			esc_html__('Inventory Bridge for Sapo cần WooCommerce được kích hoạt.', 'sapo-sync-for-woocommerce')
 		);
 	}
 }

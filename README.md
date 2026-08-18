@@ -1,10 +1,10 @@
-# Sapo Sync for WooCommerce
+# Inventory Bridge for Sapo
 
 Plugin tích hợp WooCommerce với Sapo Omni/POS, không phụ thuộc theme hoặc thương hiệu cửa hàng.
 
 ## Trạng thái
 
-Phiên bản `0.5.0` bổ sung production execution profile và hardening cho reconciliation, order contract và event delivery:
+Phiên bản `0.5.1` bổ sung branding công khai phù hợp guideline WordPress trên nền production execution profile và hardening cho reconciliation, order contract và event delivery:
 
 - Có plugin header hợp lệ để WordPress nhận diện plugin.
 - Có autoload/bootstrap, activation migration và ba bảng mapping–outbox–event inbox.
@@ -108,8 +108,8 @@ Combo, sản phẩm quy đổi, lô–HSD và serial/IMEI nằm ngoài MVP. Ki�
 
 ## Quy ước
 
-- Plugin slug: `sapo-sync-for-woocommerce`
-- Text domain: `sapo-sync-for-woocommerce`
+- Plugin slug: `inventory-bridge-for-sapo`
+- Text domain: `sapo-sync-for-woocommerce` (retained for upgrade compatibility)
 - PHP namespace dự kiến: `WooSapoSync`
 - Prefix constant: `WOO_SAPO_SYNC_`
 - Prefix bảng dữ liệu dự kiến: `wss_sapo_`

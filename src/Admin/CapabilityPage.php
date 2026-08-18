@@ -44,8 +44,8 @@ final class CapabilityPage
 
 		add_submenu_page(
 			'woocommerce',
-			__('Sapo Sync', 'sapo-sync-for-woocommerce'),
-			__('Sapo Sync', 'sapo-sync-for-woocommerce'),
+			__('Inventory Bridge', 'sapo-sync-for-woocommerce'),
+			__('Inventory Bridge', 'sapo-sync-for-woocommerce'),
 			'manage_woocommerce',
 			'sapo-sync-for-woocommerce',
 			[self::class, 'render']
@@ -67,7 +67,7 @@ final class CapabilityPage
 		$connection_configured = ConnectionSettings::is_configured();
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('Sapo Sync for WooCommerce', 'sapo-sync-for-woocommerce'); ?></h1>
+			<h1><?php echo esc_html__('Inventory Bridge for Sapo', 'sapo-sync-for-woocommerce'); ?></h1>
 			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
 			<?php if (isset($_GET['woo_sapo_order_verified'])) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html__('Order contract smoke test thành công: đã tạo và hủy order test, capability ghi đơn đã được mở cho connection hiện tại.', 'sapo-sync-for-woocommerce'); ?></p></div>
@@ -180,7 +180,7 @@ final class CapabilityPage
 										?>
 									</li>
 									<li>
-									<?php echo esc_html__('Đặt tên ứng dụng, ví dụ “Sapo Sync for WooCommerce”. Email liên hệ có thể để trống nếu Sapo cho phép.', 'sapo-sync-for-woocommerce'); ?>
+									<?php echo esc_html__('Đặt tên ứng dụng, ví dụ “Inventory Bridge for Sapo”. Email liên hệ có thể để trống nếu Sapo cho phép.', 'sapo-sync-for-woocommerce'); ?>
 									</li>
 									<li>
 										<?php echo esc_html__('Chọn quyền tối thiểu cho luồng đồng bộ hiện tại:', 'sapo-sync-for-woocommerce'); ?>

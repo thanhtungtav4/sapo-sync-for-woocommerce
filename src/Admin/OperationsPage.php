@@ -35,8 +35,8 @@ final class OperationsPage
 		}
 		add_submenu_page(
 			'woocommerce',
-			__('Sapo Sync Operations', 'sapo-sync-for-woocommerce'),
-			__('Sapo Operations', 'sapo-sync-for-woocommerce'),
+			__('Inventory Bridge Operations', 'sapo-sync-for-woocommerce'),
+			__('Inventory Bridge', 'sapo-sync-for-woocommerce'),
 			'manage_woocommerce',
 			'sapo-sync-for-woocommerce-operations',
 			[self::class, 'render']
@@ -59,7 +59,7 @@ final class OperationsPage
 		$recent_operations = $wpdb->get_results("SELECT operation_type, aggregate_id, status, attempt_count, last_error_code, updated_at FROM {$operations_table} ORDER BY id DESC LIMIT 25", ARRAY_A);
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('Sapo Sync Operations', 'sapo-sync-for-woocommerce'); ?></h1>
+			<h1><?php echo esc_html__('Inventory Bridge Operations', 'sapo-sync-for-woocommerce'); ?></h1>
 			<p><?php echo esc_html__('Dashboard chỉ hiển thị trạng thái/metadata vận hành; payload webhook và credentials không được hiển thị.', 'sapo-sync-for-woocommerce'); ?></p>
 			<?php self::render_counts(__('Outbox operations', 'sapo-sync-for-woocommerce'), $operation_counts, 'status'); ?>
 			<?php self::render_counts(__('Event inbox', 'sapo-sync-for-woocommerce'), $event_counts, 'status'); ?>

@@ -42,8 +42,8 @@ final class MappingPage
 
 		add_submenu_page(
 			'woocommerce',
-			__('Sapo Product Mappings', 'sapo-sync-for-woocommerce'),
-			__('Sapo Mappings', 'sapo-sync-for-woocommerce'),
+			__('Inventory Bridge Product Mappings', 'sapo-sync-for-woocommerce'),
+			__('Inventory Bridge Mappings', 'sapo-sync-for-woocommerce'),
 			'manage_woocommerce',
 			'sapo-sync-for-woocommerce-mappings',
 			[self::class, 'render']
@@ -70,7 +70,7 @@ final class MappingPage
 		$statuses = [MappingStatus::ACTIVE, MappingStatus::NEEDS_REVIEW, MappingStatus::MISSING, MappingStatus::DISABLED];
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('Sapo Product Mappings', 'sapo-sync-for-woocommerce'); ?></h1>
+			<h1><?php echo esc_html__('Inventory Bridge Product Mappings', 'sapo-sync-for-woocommerce'); ?></h1>
 			<p><?php echo esc_html__('Tìm theo SKU hoặc ID. Liên kết thủ công chỉ chuyển ACTIVE sau khi người vận hành đã xác minh Sapo product/variant ID.', 'sapo-sync-for-woocommerce'); ?></p>
 			<form method="get">
 				<input type="hidden" name="page" value="sapo-sync-for-woocommerce-mappings" />

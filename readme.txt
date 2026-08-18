@@ -1,10 +1,10 @@
-=== Sapo Sync for WooCommerce ===
+=== Inventory Bridge for Sapo ===
 Contributors: nttungdev
 Tags: woocommerce, sapo, inventory, stock, order sync
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Synchronize WooCommerce products, inventory and orders with Sapo Omni/POS using 
 
 == Description ==
 
-Sapo Sync for WooCommerce keeps Sapo as the operational source for product variants, branch inventory and order fulfillment while WooCommerce remains the storefront and checkout system.
+Inventory Bridge for Sapo keeps Sapo as the operational source for product variants, branch inventory and order fulfillment while WooCommerce remains the storefront and checkout system.
 
 Highlights:
 
@@ -29,12 +29,12 @@ Combo/bundle products and price-list synchronization are intentionally outside t
 == Installation ==
 
 1. Install and activate WooCommerce.
-2. Upload the `sapo-sync-for-woocommerce` folder to `/wp-content/plugins/` or install the ZIP from Plugins > Add New > Upload Plugin.
-3. Activate Sapo Sync for WooCommerce.
-4. Open WooCommerce > Sapo Sync and follow the connection guide.
+2. Upload the `inventory-bridge-for-sapo` folder to `/wp-content/plugins/` or install the ZIP from Plugins > Add New > Upload Plugin.
+3. Activate Inventory Bridge for Sapo.
+4. Open WooCommerce > Inventory Bridge and follow the connection guide.
 5. Keep inventory in Shadow mode until mappings and the Sapo contract test pass.
 
-If WP-Cron is disabled, open WooCommerce > Sapo Sync, choose External or Hybrid, set a dedicated cron
+If WP-Cron is disabled, open WooCommerce > Inventory Bridge, choose External or Hybrid, set a dedicated cron
 token, and call the displayed REST endpoint from the server every minute:
 
 `curl -fsS -X POST -H 'Authorization: Bearer YOUR_CRON_TOKEN' https://example.com/wp-json/woo-sapo/v1/cron`
@@ -95,8 +95,11 @@ Sapo is an external service. Its terms and privacy policies apply to data proces
 
 == Changelog ==
 
+= 0.5.1 =
+* Renamed the public plugin to Inventory Bridge for Sapo and moved the Sapo trademark to a trailing service reference.
+
 = 0.5.0 =
-* Renamed the public plugin and slug to Sapo Sync for WooCommerce for WordPress.org trademark compliance.
+* Prepared the initial directory-ready release with production execution profiles and complete Sapo privacy disclosures.
 * Updated the Plugin Check workflow and resolved current WordPress 7.0/readme compatibility findings.
 * Added production execution profiles and an authenticated external cron runner.
 * Moved the reversible order contract smoke test into an Advanced section in the admin UI.

@@ -1,6 +1,6 @@
 <?php
 /**
- * Removes data owned by Sapo Sync for WooCommerce when the plugin is deleted.
+ * Removes data owned by Inventory Bridge for Sapo when the plugin is deleted.
  *
  * WooCommerce orders, customer records and remote Sapo data are intentionally
  * preserved. Only this plugin's options, operational tables and order metadata
