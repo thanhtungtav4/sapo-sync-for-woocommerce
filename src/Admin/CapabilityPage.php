@@ -78,10 +78,6 @@ final class CapabilityPage
 			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
 			<?php if (isset($_GET['woo_sapo_error_code'])) : ?>
 				<div class="notice notice-warning is-dismissible"><p><?php echo esc_html(sprintf(__('Mã lỗi kết nối Sapo: %s. Đây là mã chẩn đoán, không phải credential.', 'sapo-sync-for-woocommerce'), sanitize_key((string) wp_unslash($_GET['woo_sapo_error_code'])))); ?></p></div>
-			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
-			<?php if (isset($_GET['woo_sapo_credential_fingerprint'])) : ?>
-				<div class="notice notice-warning is-dismissible"><p><?php echo esc_html(sprintf(__('Credential fingerprint (để đối chiếu an toàn): %s.', 'sapo-sync-for-woocommerce'), sanitize_key((string) wp_unslash($_GET['woo_sapo_credential_fingerprint'])))); ?></p></div>
-			<?php endif; ?>
 			<?php endif; ?>
 			<div class="notice <?php echo $passed ? 'notice-success' : ($connection_configured ? 'notice-info' : 'notice-warning'); ?> inline">
 				<p>
@@ -336,9 +332,6 @@ final class CapabilityPage
 		$query = ['page' => 'sapo-sync-for-woocommerce', 'woo_sapo_verified' => '1'];
 		if (! $result['connection_ok'] && '' !== $result['error_code']) {
 			$query['woo_sapo_error_code'] = $result['error_code'];
-			if ('' !== $result['credential_fingerprint']) {
-				$query['woo_sapo_credential_fingerprint'] = $result['credential_fingerprint'];
-			}
 		}
 		$redirect = add_query_arg($query, admin_url('admin.php'));
 		wp_safe_redirect($redirect);
