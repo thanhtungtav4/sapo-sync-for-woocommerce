@@ -18,7 +18,7 @@ final class CapabilityVerifier
 	}
 
 	/**
-	 * @return array{connection_ok: bool, verified: int, missing: int, message: string, error_code: string}
+	 * @return array{connection_ok: bool, verified: int, missing: int, message: string, error_code: string, credential_fingerprint: string}
 	 */
 	public static function verify(SapoGateway $gateway): array
 	{
@@ -43,6 +43,7 @@ final class CapabilityVerifier
 			'missing' => $missing,
 			'message' => $connection->message,
 			'error_code' => (string) ($connection->details['error_code'] ?? ''),
+			'credential_fingerprint' => (string) ($connection->details['credential_fingerprint'] ?? ''),
 		];
 	}
 }

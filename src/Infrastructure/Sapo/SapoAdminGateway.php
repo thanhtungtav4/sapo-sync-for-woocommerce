@@ -138,7 +138,12 @@ final class SapoAdminGateway implements SapoGateway
 				? $exception->error_code()
 				: ErrorCode::REMOTE_SERVER;
 
-			return new ConnectionResult(false, 'Không thể kết nối Sapo Admin API.', ['error_code' => $error_code]);
+			return new ConnectionResult(false, 'Không thể kết nối Sapo Admin API.', [
+				'error_code' => $error_code,
+				// A short non-reversible fingerprint lets an administrator compare the
+				// stored credential pair without ever rendering the credentials.
+				'credential_fingerprint' => substr(hash('sha256', $this->api_key . ':' . $this->api_secret), 0, 12),
+			]);
 		}
 	}
 
