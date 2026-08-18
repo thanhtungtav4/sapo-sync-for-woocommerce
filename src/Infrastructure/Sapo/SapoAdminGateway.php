@@ -220,7 +220,9 @@ final class SapoAdminGateway implements SapoGateway
 			$this->delete_customer($customer_id);
 			$customer_id = '';
 
-			$reference = 'WOOSAPO-CONTRACT-TEST-' . gmdate('YmdHis') . '-' . $random;
+			// Sapo limits order.reference to 32 characters. Keep the smoke-test
+			// reference comfortably below that limit while retaining uniqueness.
+			$reference = 'WSS-CT-' . gmdate('ymdHis') . '-' . $random;
 			$payload = [
 				'order' => [
 					'email' => $customer_email,
