@@ -75,7 +75,10 @@ final class CapabilityPage
 			<?php elseif (isset($_GET['woo_sapo_order_verify_error'])) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html__('Order contract smoke test thất bại. Capability ghi đơn vẫn bị khóa; kiểm tra quyền Order và log Sapo.', 'sapo-sync-for-woocommerce'); ?></p></div>
 			<?php endif; ?>
-			<?php if (isset($_GET['woo_sapo_error_code'])) : ?>
+			<?php
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce.
+			if (isset($_GET['woo_sapo_error_code'])) :
+			?>
 				<?php
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce.
 				$error_code = sanitize_key((string) wp_unslash($_GET['woo_sapo_error_code']));
