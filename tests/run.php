@@ -24,6 +24,7 @@ use WooSapoSync\Infrastructure\WooCommerce\OrderSnapshotBuilder;
 use WooSapoSync\Infrastructure\WooCommerce\ProductStockUpdater;
 use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
 use WooSapoSync\Admin\ConnectionSettings;
+use WooSapoSync\Application\CapabilityGate;
 use WooSapoSync\Infrastructure\WordPress\InventoryLocationPolicy;
 use WooSapoSync\Webhook\WebhookEventNormalizer;
 use WooSapoSync\Webhook\WebhookSignature;
@@ -105,8 +106,39 @@ if (! function_exists('absint')) {
 	function absint($value): int { return abs((int) $value); }
 }
 if (! function_exists('get_option')) {
-	function get_option($key, $default = false) { return $default; }
+	$GLOBALS['woo_sapo_test_options'] = [];
+	function get_option($key, $default = false) {
+		return array_key_exists($key, $GLOBALS['woo_sapo_test_options']) ? $GLOBALS['woo_sapo_test_options'][$key] : $default;
+	}
 }
+if (! function_exists('update_option')) {
+	function update_option($key, $value, $autoload = null) {
+		$GLOBALS['woo_sapo_test_options'][$key] = $value;
+		return true;
+	}
+}
+if (! function_exists('delete_option')) {
+	function delete_option($key) {
+		unset($GLOBALS['woo_sapo_test_options'][$key]);
+		return true;
+	}
+}
+if (! function_exists('current_time')) {
+	function current_time($type, $gmt = false) { return gmdate('Y-m-d H:i:s'); }
+}
+if (! function_exists('sanitize_textarea_field')) {
+	function sanitize_textarea_field($value) { return trim(strip_tags((string) $value)); }
+}
+$verified_capabilities = [];
+foreach (CapabilityGate::REQUIRED_CAPABILITIES as $capability) {
+	$verified_capabilities[$capability] = ['verified' => true, 'verified_at' => '2026-01-01 00:00:00', 'notes' => 'fixture'];
+}
+update_option(CapabilityGate::OPTION_KEY, $verified_capabilities, false);
+$assert(CapabilityGate::is_passed(), 'capability gate accepts a fully verified snapshot');
+update_option(CapabilityGate::ORDER_CONTRACT_OPTION, ['verified' => true, 'capabilities' => ['customers' => true]], false);
+CapabilityGate::invalidate('Token no longer has Sapo permission.');
+$assert(! CapabilityGate::is_passed(), 'capability gate fails closed after Sapo auth rejection');
+$assert(! CapabilityGate::order_contract_verified(), 'order contract is cleared after Sapo auth rejection');
 $resolved_without_policy = InventoryLocationPolicy::resolve([['id' => 'loc-unconfigured']]);
 $assert(false === ($resolved_without_policy[0]['serves'] ?? true), 'location policy fail-closes unconfigured remote branches');
 $fake_mapping_insert = [];

@@ -383,6 +383,10 @@ final class OrderSyncWorker
 
 	private function handle_sapo_error(int $operation_id, SapoException $exception): void
 	{
+		if (ErrorCode::AUTH === $exception->error_code()) {
+			CapabilityGate::invalidate();
+		}
+
 		$operation = $this->operations->find_by_id($operation_id);
 		// mark_processing increments the attempt before the remote call. Do not
 		// add one again or the first retry would incorrectly start at backoff #2.

@@ -118,4 +118,28 @@ final class CapabilityGate
 
 		return update_option(self::OPTION_KEY, $snapshot, false);
 	}
+
+	/**
+	 * Fail closed immediately after Sapo rejects an authenticated request.
+	 *
+	 * A previously verified capability is not proof that the token still has
+	 * permission. Clearing the snapshot forces the administrator to verify the
+	 * current credentials before any later queued job can write again.
+	 */
+	public static function invalidate(string $notes = 'Sapo từ chối quyền truy cập; cần xác minh lại kết nối.'): void
+	{
+		$snapshot = self::snapshot();
+		$timestamp = current_time('mysql', true);
+		$notes = sanitize_textarea_field($notes);
+		foreach (self::REQUIRED_CAPABILITIES as $capability) {
+			$snapshot[$capability] = [
+				'verified'    => false,
+				'verified_at' => $timestamp,
+				'notes'       => $notes,
+			];
+		}
+
+		update_option(self::OPTION_KEY, $snapshot, false);
+		delete_option(self::ORDER_CONTRACT_OPTION);
+	}
 }

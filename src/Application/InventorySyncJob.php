@@ -7,6 +7,7 @@
 
 namespace WooSapoSync\Application;
 
+use WooSapoSync\Infrastructure\Sapo\ErrorCode;
 use WooSapoSync\Infrastructure\Sapo\Exception\SapoException;
 use WooSapoSync\Infrastructure\WordPress\JobLock;
 use WooSapoSync\Infrastructure\WordPress\SyncLogger;
@@ -39,6 +40,9 @@ final class InventorySyncJob
 				'differences' => $report['differences'],
 			]);
 		} catch (SapoException $exception) {
+			if (ErrorCode::AUTH === $exception->error_code()) {
+				CapabilityGate::invalidate();
+			}
 			SyncLogger::log('warning', 'Inventory reconciliation could not run.', ['error_code' => $exception->error_code()]);
 		} catch (\Throwable $exception) {
 			SyncLogger::log('error', 'Unexpected inventory reconciliation failure.');

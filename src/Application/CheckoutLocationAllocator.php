@@ -12,6 +12,7 @@ use WooSapoSync\Domain\Inventory\LocationAllocator;
 use WooSapoSync\Domain\Product\MappingStatus;
 use WooSapoSync\Domain\Product\ProductType;
 use WooSapoSync\Domain\Sku\SkuNormalizer;
+use WooSapoSync\Infrastructure\Sapo\ErrorCode;
 use WooSapoSync\Infrastructure\Sapo\Exception\SapoException;
 use WooSapoSync\Infrastructure\WordPress\InventoryLocationPolicy;
 use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
@@ -136,6 +137,9 @@ final class CheckoutLocationAllocator
 				$this->error = 'Không có chi nhánh Sapo nào đủ tồn cho toàn bộ giỏ hàng.';
 			}
 		} catch (SapoException $exception) {
+			if (ErrorCode::AUTH === $exception->error_code()) {
+				CapabilityGate::invalidate();
+			}
 			$this->error = 'Không thể xác minh tồn kho Sapo lúc checkout; vui lòng thử lại sau.';
 		} catch (\Throwable $exception) {
 			$this->error = 'Không thể xác minh tồn kho Sapo lúc checkout; vui lòng thử lại sau.';

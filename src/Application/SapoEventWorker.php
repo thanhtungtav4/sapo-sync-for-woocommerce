@@ -138,6 +138,9 @@ final class SapoEventWorker
 			$this->events->mark_processed($event_key);
 			SyncLogger::log('info', 'Sapo order event processed.', ['event_key' => $event_key, 'remote_object_id' => $remote_id]);
 		} catch (SapoException $exception) {
+			if (ErrorCode::AUTH === $exception->error_code()) {
+				CapabilityGate::invalidate();
+			}
 			SyncLogger::log('warning', 'Sapo event processing failed.', ['event_key' => $event_key, 'error_code' => $exception->error_code()]);
 			$this->retry_or_fail($event, $exception->error_code(), $exception->getMessage());
 		} catch (\Throwable $exception) {
