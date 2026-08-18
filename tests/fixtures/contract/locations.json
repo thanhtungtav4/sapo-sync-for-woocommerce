@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "id": "loc-main",
+      "name": "Cua hang chinh",
+      "priority": 0,
+      "serves_online": true
+    }
+  ],
+  "next_cursor": null
+}

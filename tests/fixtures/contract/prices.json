@@ -1,0 +1,12 @@
+[
+  {
+    "variant_id": "var-simple-1",
+    "price": "149000",
+    "price_list_id": null
+  },
+  {
+    "variant_id": "var-variation-1",
+    "price": "159000",
+    "price_list_id": null
+  }
+]

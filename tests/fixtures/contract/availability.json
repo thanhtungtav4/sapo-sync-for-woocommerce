@@ -1,0 +1,12 @@
+[
+  {
+    "variant_id": "var-simple-1",
+    "location_id": "loc-main",
+    "available": 8
+  },
+  {
+    "variant_id": "var-variation-1",
+    "location_id": "loc-main",
+    "available": 3
+  }
+]

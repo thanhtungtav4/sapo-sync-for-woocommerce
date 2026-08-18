@@ -1,0 +1,34 @@
+name: WordPress Plugin Check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.php'
+      - 'readme.txt'
+      - '.github/workflows/plugin-check.yml'
+  pull_request:
+    paths:
+      - '**.php'
+      - 'readme.txt'
+      - '.github/workflows/plugin-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run WordPress Plugin Check
+        uses: wordpress/plugin-check-action@v1.1.9
+        with:
+          build-dir: .
+          exclude-directories: |
+            tests

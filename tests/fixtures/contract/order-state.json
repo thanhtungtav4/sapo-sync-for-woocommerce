@@ -1,0 +1,9 @@
+{
+  "sapo_order_id": "sapo-order-1",
+  "order": "approved",
+  "financial": "paid",
+  "processing": "packed",
+  "delivery": "delivered",
+  "tracking_number": "TRACK-FIXTURE-1",
+  "modified_at": "2026-01-01T00:00:00Z"
+}

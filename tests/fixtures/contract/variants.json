@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "product_id": "prod-simple-1",
+      "variant_id": "var-simple-1",
+      "sku": "CAM-001",
+      "product_type": "SIMPLE",
+      "modified_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "product_id": "prod-variation-1",
+      "variant_id": "var-variation-1",
+      "sku": "CAM-001-BLK",
+      "product_type": "VARIATION",
+      "modified_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "next_cursor": null
+}
