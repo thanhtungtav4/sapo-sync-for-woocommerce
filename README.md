@@ -4,7 +4,7 @@ Plugin tích hợp WooCommerce với Sapo Omni/POS, không phụ thuộc theme h
 
 ## Trạng thái
 
-Phiên bản `0.5.1` bổ sung branding công khai phù hợp guideline WordPress trên nền production execution profile và hardening cho reconciliation, order contract và event delivery:
+Phiên bản `0.5.2` bổ sung hardening cho bảo mật credential, reconciliation, order contract và event delivery trên nền branding công khai phù hợp guideline WordPress:
 
 - Có plugin header hợp lệ để WordPress nhận diện plugin.
 - Có autoload/bootstrap, activation migration và ba bảng mapping–outbox–event inbox.
@@ -25,6 +25,8 @@ Phiên bản `0.5.1` bổ sung branding công khai phù hợp guideline WordPres
   connection hiện tại.
 - Có ba execution profile: Automatic (Action Scheduler/WP-Cron), External (cron server gọi REST runner)
   và Hybrid (cả hai). External runner dùng token riêng, job lock và chạy reconciliation/queue idempotent.
+- Khi Sapo trả 401/403, capability snapshot bị vô hiệu hóa ngay; lịch sử event/outbox terminal được dọn
+  theo retention window để database không phình vô hạn.
 - Màn hình quản trị ưu tiên trạng thái production; contract test tạo + hủy order được chuyển vào mục
   Advanced để không nhầm với luồng đồng bộ hằng ngày.
 
@@ -82,7 +84,7 @@ external reference, phân kho không tách đơn, mapping trạng thái và adap
 
 ## Cron bên ngoài
 
-Mở WooCommerce → Sapo Sync, chọn `External` hoặc `Hybrid`, đặt một token riêng rồi lưu cấu hình. Cron
+Mở WooCommerce → Inventory Bridge, chọn `External` hoặc `Hybrid`, đặt một token riêng rồi lưu cấu hình. Cron
 server gọi endpoint mỗi phút bằng header Bearer:
 
 ```bash

@@ -4,7 +4,7 @@ Tags: woocommerce, sapo, inventory, stock, order sync
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.5.1
+Stable tag: 0.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,11 @@ Sapo personal-data policy: https://help.sapo.vn/chinh-sach-bao-ve-du-lieu-ca-nha
 Sapo is an external service. Its terms and privacy policies apply to data processed by Sapo; the site owner should review those terms before enabling order synchronisation.
 
 == Changelog ==
+
+= 0.5.2 =
+* Separated the optional webhook URL token from the HMAC secret and stopped exposing secrets in generated URLs.
+* Hardened external cron locks, paginated catalog reads, capability invalidation after Sapo auth failures, and sync-history retention.
+* Preserved failed inventory targets for operator review instead of marking missing WooCommerce products as synchronized.
 
 = 0.5.1 =
 * Renamed the public plugin to Inventory Bridge for Sapo and moved the Sapo trademark to a trailing service reference.

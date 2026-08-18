@@ -57,7 +57,7 @@ final class ExternalCronController
 		if (! Settings::external_cron_enabled()) {
 			return new \WP_Error(
 				'woo_sapo_external_cron_disabled',
-				'External cron chưa được bật trong cấu hình Sapo Sync.',
+				'External cron chưa được bật trong cấu hình Inventory Bridge.',
 				['status' => 409]
 			);
 		}

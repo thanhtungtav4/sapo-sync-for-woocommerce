@@ -2,9 +2,9 @@
 /**
  * Sapo Admin API gateway for Private Apps/OAuth credentials.
  *
- * The gateway implements the verified read path and public customer/order
- * lookup primitives. Omni/POS create-and-approve remains fail-closed until
- * the account-specific write contract is captured and enabled.
+ * The gateway implements the verified read path and customer/order primitives.
+ * Omni/POS writes remain fail-closed until the account-specific write contract
+ * has been captured and the corresponding capabilities are enabled.
  *
  * @package WooSapoSync
  */

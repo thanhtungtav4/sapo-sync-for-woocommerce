@@ -3,7 +3,7 @@
  * Plugin Name:       Inventory Bridge for Sapo
  * Plugin URI:        https://nttung.dev/sapo-sync-for-woocommerce/
  * Description:       Đồng bộ sản phẩm, tồn kho và đơn hàng WooCommerce với Sapo Omni/POS.
- * Version:           0.5.1
+ * Version:           0.5.2
  * Requires at least: 6.5
  * Requires PHP:      8.0
  * Requires Plugins:  woocommerce
@@ -19,7 +19,7 @@
 defined('ABSPATH') || exit;
 
 if (! defined('WOO_SAPO_SYNC_VERSION')) {
-	define('WOO_SAPO_SYNC_VERSION', '0.5.1');
+	define('WOO_SAPO_SYNC_VERSION', '0.5.2');
 }
 
 if (! defined('WOO_SAPO_SYNC_FILE')) {
