@@ -100,6 +100,10 @@ final class InventoryReconciler
 				}
 
 				$result = $this->stocks->update($mapping, $available);
+				if ('' !== (string) ($result['error'] ?? '')) {
+					$report['errors'][] = (string) $result['error'] . ':' . (string) ($mapping['woo_object_key'] ?? '');
+					continue;
+				}
 				if ($result['updated']) {
 					$report['updated']++;
 				}

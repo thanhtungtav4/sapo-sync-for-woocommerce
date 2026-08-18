@@ -26,14 +26,17 @@ final class ProductStockUpdater
 
 	/**
 	 * @param array<string, mixed> $mapping
-	 * @return array{updated: bool, previous: float|null, current: float}
+	 * @return array{updated: bool, previous: float|null, current: float, error: string}
 	 */
 	public function update(array $mapping, float $available): array
 	{
 		$id = ! empty($mapping['woo_variation_id']) ? (int) $mapping['woo_variation_id'] : (int) ($mapping['woo_product_id'] ?? 0);
 		$product = $this->load_product($id);
-		if (! is_object($product) || ! method_exists($product, 'set_manage_stock') || ! method_exists($product, 'set_stock_quantity')) {
-			return ['updated' => false, 'previous' => null, 'current' => max(0.0, $available)];
+		if (! is_object($product)) {
+			return ['updated' => false, 'previous' => null, 'current' => max(0.0, $available), 'error' => 'MISSING_WOO_PRODUCT'];
+		}
+		if (! method_exists($product, 'set_manage_stock') || ! method_exists($product, 'set_stock_quantity')) {
+			return ['updated' => false, 'previous' => null, 'current' => max(0.0, $available), 'error' => 'UNSUPPORTED_WOO_PRODUCT'];
 		}
 
 		$previous = method_exists($product, 'get_stock_quantity') ? $product->get_stock_quantity() : null;
@@ -52,6 +55,7 @@ final class ProductStockUpdater
 			'updated' => null === $previous || abs($previous - $current) > 0.00001,
 			'previous' => $previous,
 			'current' => $current,
+			'error' => '',
 		];
 	}
 

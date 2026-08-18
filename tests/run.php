@@ -389,6 +389,11 @@ $updater = new ProductStockUpdater(static function (int $id) use ($stock_product
 $assert(2.0 === $updater->current(['woo_product_id' => 50]), 'stock updater shadow read does not mutate');
 $update_result = $updater->update(['woo_product_id' => 50], 0.0);
 $assert($update_result['updated'] && $stock_values['manage'] && 'outofstock' === $stock_values['status'], 'stock updater writes through Woo CRUD and status');
+$missing_updater = new ProductStockUpdater(static function (int $id) {
+	return null;
+});
+$missing_result = $missing_updater->update(['woo_product_id' => 404], 3.0);
+$assert('MISSING_WOO_PRODUCT' === ($missing_result['error'] ?? ''), 'stock updater reports missing Woo product instead of false success');
 $calculated_stock = StockAvailabilityCalculator::calculate(
 	[
 		['id' => 'hcm', 'serves' => true],
