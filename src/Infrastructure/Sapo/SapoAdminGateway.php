@@ -26,6 +26,8 @@ defined('ABSPATH') || exit;
 
 final class SapoAdminGateway implements SapoGateway
 {
+	private const MAX_VARIANT_PAGES = 1000;
+
 	private string $base_url;
 
 	private string $auth_mode;
@@ -935,13 +937,26 @@ final class SapoAdminGateway implements SapoGateway
 	{
 		$remaining = array_values(array_filter($variant_ids, fn (string $id): bool => ! isset($this->variant_cache[$id])));
 		$cursor = null;
-		for ($page = 0; $page < 100 && [] !== $remaining; $page++) {
+		$seen_cursors = [];
+		for ($page = 0; $page < self::MAX_VARIANT_PAGES && [] !== $remaining; $page++) {
 			$response = $this->list_variants($cursor);
 			$remaining = array_values(array_filter($remaining, fn (string $id): bool => ! isset($this->variant_cache[$id])));
-			$cursor = $response['next_cursor'];
-			if (null === $cursor) {
+			$next = isset($response['next_cursor']) && null !== $response['next_cursor'] ? (string) $response['next_cursor'] : '';
+			if ('' === $next) {
 				break;
 			}
+			if (isset($seen_cursors[$next])) {
+				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::CONFLICT, 'Sapo variant pagination repeated a cursor.');
+			}
+			$seen_cursors[$next] = true;
+			$cursor = $next;
+		}
+
+		if ([] !== $remaining) {
+			throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(
+				ErrorCode::VALIDATION,
+				'Sapo không trả về đủ variant đã yêu cầu để đọc tồn kho.'
+			);
 		}
 	}
 

@@ -273,6 +273,25 @@ $sapo_prices = $sapo_gateway->get_prices(['v-1']);
 $assert($sapo_connection->ok && $sapo_gateway->capabilities()->supports('availability_by_location'), 'Sapo Admin gateway verifies read-side capabilities');
 $assert('CAM-1' === ($sapo_variants['items'][0]['sku'] ?? '') && 'SIMPLE' === ($sapo_variants['items'][0]['product_type'] ?? ''), 'Sapo Admin gateway flattens simple product variants');
 $assert(5.0 === (float) ($sapo_availability[0]['available'] ?? 0) && '149000' === ($sapo_prices[0]['price'] ?? ''), 'Sapo Admin gateway preserves live stock and price fields');
+$missing_variant_gateway = new SapoAdminGateway(
+	'https://demo.mysapo.net',
+	'basic',
+	'key',
+	'secret',
+	'',
+	new class implements HttpTransport {
+		public function request(string $method, string $url, array $headers = [], ?array $body = null): array
+		{
+			return ['status' => 200, 'headers' => [], 'body' => ['products' => []]];
+		}
+	}
+);
+try {
+	$missing_variant_gateway->get_availability(['variant-not-returned'], ['loc-1']);
+	$assert(false, 'Sapo Admin gateway must not continue with an unprimed variant');
+} catch (SapoException $exception) {
+	$assert(ErrorCode::VALIDATION === $exception->error_code(), 'missing Sapo variant fails closed before an inventory request');
+}
 try {
 	$sapo_gateway->get_prices(['v-1'], 'price-list-1');
 	$assert(false, 'Sapo Admin gateway must not silently use base price for an unverified price list');
