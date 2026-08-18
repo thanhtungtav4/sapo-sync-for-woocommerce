@@ -17,6 +17,8 @@ use WooSapoSync\Infrastructure\WooCommerce\CatalogReader;
 
 defined('ABSPATH') || exit;
 
+/* phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are logged, not rendered as browser output. */
+
 final class MappingSynchronizer
 {
 	private const MAX_SAPO_PAGES = 1000;
