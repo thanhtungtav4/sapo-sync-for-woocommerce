@@ -26,9 +26,13 @@ final class CapabilityVerifier
 		$snapshot = $gateway->capabilities();
 		$verified = 0;
 		$missing = 0;
+		$snapshot_notes = $snapshot->notes();
 		foreach (CapabilityGate::REQUIRED_CAPABILITIES as $capability) {
 			$supported = $connection->ok && $snapshot->supports($capability);
-			$note = $supported ? 'Gateway probe passed.' : ($connection->message ?: 'Capability is not supported by the adapter.');
+			$note = (string) ($snapshot_notes[$capability] ?? '');
+			if ('' === $note) {
+				$note = $supported ? 'Gateway probe passed.' : ($connection->message ?: 'Capability is not supported by the adapter.');
+			}
 			CapabilityGate::mark($capability, $supported, $note);
 			if ($supported) {
 				$verified++;

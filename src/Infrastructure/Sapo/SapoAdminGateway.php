@@ -108,13 +108,20 @@ final class SapoAdminGateway implements SapoGateway
 
 			$customers = $this->probe_list('/admin/customers.json?limit=1', 'customers', $probes);
 			$capabilities['customers'] = null !== $customers;
+			$customer_probe = (string) ($probes['customers'] ?? 'unknown');
 			$orders = $this->probe_list('/admin/orders.json?limit=1', 'orders', $probes);
 			$capabilities['order_state'] = false;
+			$order_probe = (string) ($probes['orders'] ?? 'unknown');
 			if (null !== $orders) {
 				$probes['order_state'] = 'detail contract required';
 			}
 			$notes = [
-				'order_state' => 'Cần fixture endpoint chi tiết đơn trước khi bật runtime.',
+				'customers' => null !== $customers
+					? 'Đã đọc được customer fixture từ Sapo Admin API.'
+					: 'Probe customers thất bại (' . $customer_probe . '); kiểm tra quyền Khách hàng trên Private App.',
+				'order_state' => null !== $orders
+					? 'Đã đọc được order fixture; cần contract test chi tiết trước khi bật runtime.'
+					: 'Probe orders thất bại (' . $order_probe . '); cần quyền Đơn hàng và contract test.',
 				'create_and_approve_orders' => 'Chưa bật: cần xác minh payload tạo/duyệt đơn Omni/POS.',
 				'order_external_reference_lookup' => 'Chưa bật: cần xác minh field external reference.',
 				'cancel_orders' => 'Chưa bật: cần xác minh rule hủy theo fulfillment.',
