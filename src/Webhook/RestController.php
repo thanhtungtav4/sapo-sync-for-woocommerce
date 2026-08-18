@@ -55,10 +55,11 @@ final class RestController
 	public function authorize($request)
 	{
 		$secret = WebhookSignature::secret();
-		if ('' === $secret) {
+		$webhook_token = WebhookSignature::token();
+		if ('' === $secret && '' === $webhook_token) {
 			return new \WP_Error(
 				'woo_sapo_webhook_unconfigured',
-				'Sapo webhook secret chưa được cấu hình.',
+				'Sapo webhook secret hoặc URL token chưa được cấu hình.',
 				['status' => 503]
 			);
 		}
@@ -66,9 +67,14 @@ final class RestController
 		$payload = method_exists($request, 'get_body') ? (string) $request->get_body() : '';
 		$signature = $this->header($request, ['x-sapo-signature', 'x-sapo-hmac', 'x-sapo-hmac-sha256']);
 		$token = method_exists($request, 'get_param') ? trim((string) $request->get_param('token')) : '';
+		// Keep old tokenized webhook URLs working during upgrade, but never expose
+		// the HMAC secret in newly-rendered settings UI. New installations should
+		// use the dedicated token or, preferably, an HMAC header.
+		$legacy_token = '' === $webhook_token ? $secret : '';
 		$authorized = '' !== $signature
-			? WebhookSignature::verify($payload, $signature, $secret)
-			: ('' !== $token && hash_equals($secret, $token));
+			? ('' !== $secret && WebhookSignature::verify($payload, $signature, $secret))
+			: (('' !== $webhook_token && hash_equals($webhook_token, $token))
+				|| ('' !== $legacy_token && hash_equals($legacy_token, $token)));
 		if (! $authorized) {
 			return new \WP_Error(
 				'woo_sapo_webhook_invalid_signature',

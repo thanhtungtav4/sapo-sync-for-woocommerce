@@ -58,6 +58,13 @@ final class Settings
 		);
 		register_setting(
 			'woo_sapo_sync_settings_group',
+			WebhookSignature::TOKEN_OPTION,
+			[
+				'sanitize_callback' => [self::class, 'sanitize_webhook_token'],
+			]
+		);
+		register_setting(
+			'woo_sapo_sync_settings_group',
 			self::CRON_SECRET_OPTION,
 			[
 				'sanitize_callback' => [self::class, 'sanitize_cron_secret'],
@@ -115,6 +122,20 @@ final class Settings
 		$input = trim((string) $input);
 		if ('' === $input) {
 			$current = get_option(WebhookSignature::SECRET_OPTION, '');
+			return is_string($current) ? $current : '';
+		}
+
+		return sanitize_text_field($input);
+	}
+
+	/**
+	 * Keep the optional URL token independent from the HMAC signing secret.
+	 */
+	public static function sanitize_webhook_token($input): string
+	{
+		$input = trim((string) $input);
+		if ('' === $input) {
+			$current = get_option(WebhookSignature::TOKEN_OPTION, '');
 			return is_string($current) ? $current : '';
 		}
 

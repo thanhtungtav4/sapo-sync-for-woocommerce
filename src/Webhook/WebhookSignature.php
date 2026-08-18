@@ -13,6 +13,13 @@ final class WebhookSignature
 {
 	public const SECRET_OPTION = 'woo_sapo_sync_webhook_secret';
 
+	/**
+	 * Optional URL-token secret for providers that cannot send an HMAC header.
+	 * It is deliberately separate from the HMAC secret so a copied endpoint URL
+	 * does not also disclose the signing key.
+	 */
+	public const TOKEN_OPTION = 'woo_sapo_sync_webhook_token';
+
 	private function __construct()
 	{
 	}
@@ -35,6 +42,12 @@ final class WebhookSignature
 	public static function secret(): string
 	{
 		$value = get_option(self::SECRET_OPTION, '');
+		return is_string($value) ? trim($value) : '';
+	}
+
+	public static function token(): string
+	{
+		$value = get_option(self::TOKEN_OPTION, '');
 		return is_string($value) ? trim($value) : '';
 	}
 }

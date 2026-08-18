@@ -293,28 +293,37 @@ final class CapabilityPage
 							</td>
 						</tr>
 					<?php endif; ?>
-					<tr>
-						<th scope="row"><label for="sapo-sync-for-woocommerce-secret"><?php echo esc_html__('Webhook secret', 'sapo-sync-for-woocommerce'); ?></label></th>
-						<td>
-							<input id="sapo-sync-for-woocommerce-secret" type="password" class="regular-text" autocomplete="new-password" name="<?php echo esc_attr('woo_sapo_sync_webhook_secret'); ?>" value="" />
-							<p class="description"><?php echo esc_html__('Để trống để giữ secret hiện tại. Không hiển thị lại secret đã lưu.', 'sapo-sync-for-woocommerce'); ?></p>
-						</td>
-					</tr>
+						<tr>
+							<th scope="row"><label for="sapo-sync-for-woocommerce-secret"><?php echo esc_html__('Webhook secret', 'sapo-sync-for-woocommerce'); ?></label></th>
+							<td>
+								<input id="sapo-sync-for-woocommerce-secret" type="password" class="regular-text" autocomplete="new-password" name="<?php echo esc_attr('woo_sapo_sync_webhook_secret'); ?>" value="" />
+								<p class="description"><?php echo esc_html__('Để trống để giữ secret hiện tại. Không hiển thị lại secret đã lưu.', 'sapo-sync-for-woocommerce'); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="sapo-sync-for-woocommerce-token"><?php echo esc_html__('Webhook URL token riêng (tuỳ chọn)', 'sapo-sync-for-woocommerce'); ?></label></th>
+							<td>
+								<input id="sapo-sync-for-woocommerce-token" type="password" class="regular-text" autocomplete="new-password" name="<?php echo esc_attr(WebhookSignature::TOKEN_OPTION); ?>" value="" />
+								<p class="description"><?php echo esc_html__('Chỉ dùng khi Sapo không gửi được HMAC header. Đặt token riêng, không dùng lại Webhook secret/API key. Để trống để giữ giá trị hiện tại; không hiển thị lại.', 'sapo-sync-for-woocommerce'); ?></p>
+							</td>
+						</tr>
 					<tr>
 						<th scope="row"><?php echo esc_html__('Cấu hình realtime', 'sapo-sync-for-woocommerce'); ?></th>
 						<td>
 				<?php $webhook_endpoint = function_exists('rest_url') ? rest_url('woo-sapo/v1/webhook') : ''; ?>
-				<?php $webhook_secret = WebhookSignature::secret(); ?>
-				<?php if ('' !== $webhook_secret && function_exists('add_query_arg')) : ?>
-					<?php $webhook_endpoint = add_query_arg('token', $webhook_secret, $webhook_endpoint); ?>
-				<?php endif; ?>
-							<p><?php echo esc_html__('Trong Sapo, tạo webhook JSON cho các topic products/create, products/update, products/delete và store/update. Các topic này chỉ kích hoạt đồng bộ; plugin vẫn đọc tồn mới từ API.', 'sapo-sync-for-woocommerce'); ?></p>
-							<?php if ('' !== $webhook_endpoint) : ?>
-								<p><strong><?php echo esc_html__('URL nhận webhook:', 'sapo-sync-for-woocommerce'); ?></strong> <code><?php echo esc_html($webhook_endpoint); ?></code></p>
-							<?php endif; ?>
-				<p class="description"><?php echo esc_html__('Nếu Sapo gửi HMAC, dùng secret ở ô trên để xác thực chữ ký. Nếu webhook không có HMAC, dùng đúng URL có token ở trên; không chia sẻ URL này công khai. Nếu Sapo không phát topic tồn kho, polling mỗi phút vẫn tự bù dữ liệu.', 'sapo-sync-for-woocommerce'); ?></p>
-						</td>
-					</tr>
+			<?php $webhook_token = WebhookSignature::token(); ?>
+								<p><?php echo esc_html__('Trong Sapo, tạo webhook JSON cho các topic products/create, products/update, products/delete và store/update. Các topic này chỉ kích hoạt đồng bộ; plugin vẫn đọc tồn mới từ API.', 'sapo-sync-for-woocommerce'); ?></p>
+								<?php if ('' !== $webhook_endpoint) : ?>
+									<p><strong><?php echo esc_html__('URL nhận webhook (ưu tiên HMAC):', 'sapo-sync-for-woocommerce'); ?></strong> <code><?php echo esc_html($webhook_endpoint); ?></code></p>
+								<?php endif; ?>
+								<?php if ('' !== $webhook_token && '' !== $webhook_endpoint && function_exists('add_query_arg')) : ?>
+									<?php $webhook_token_endpoint = add_query_arg('token', $webhook_token, $webhook_endpoint); ?>
+									<p><strong><?php echo esc_html__('URL token riêng (chỉ dùng khi Sapo không hỗ trợ HMAC):', 'sapo-sync-for-woocommerce'); ?></strong> <code><?php echo esc_html($webhook_token_endpoint); ?></code></p>
+									<p class="notice notice-warning inline"><strong><?php echo esc_html__('Bảo mật:', 'sapo-sync-for-woocommerce'); ?></strong> <?php echo esc_html__('URL này chứa token riêng; không dùng HMAC secret, không đăng công khai và nên rotate khi nghi ngờ bị lộ.', 'sapo-sync-for-woocommerce'); ?></p>
+								<?php endif; ?>
+								<p class="description"><?php echo esc_html__('Nếu Sapo gửi HMAC, dùng Webhook secret ở ô trên để xác thực chữ ký. Chỉ nhập Webhook URL token riêng bên dưới nếu Sapo không hỗ trợ HMAC. Nếu Sapo không phát topic tồn kho, polling mỗi phút vẫn tự bù dữ liệu.', 'sapo-sync-for-woocommerce'); ?></p>
+							</td>
+						</tr>
 					<tr>
 						<th scope="row"><label for="sapo-sync-for-woocommerce-location-policy"><?php echo esc_html__('Location policy JSON', 'sapo-sync-for-woocommerce'); ?></label></th>
 						<td>

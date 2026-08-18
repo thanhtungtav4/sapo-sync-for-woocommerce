@@ -19,6 +19,7 @@ $woo_sapo_option_names = [
 	'woo_sapo_sync_capabilities',
 	'woo_sapo_order_contract_verified',
 	'woo_sapo_sync_webhook_secret',
+	'woo_sapo_sync_webhook_token',
 	'woo_sapo_sync_cron_secret',
 	'woo_sapo_sync_site_uuid',
 	'woo_sapo_sync_location_policy',
