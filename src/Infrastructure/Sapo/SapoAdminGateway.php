@@ -261,8 +261,10 @@ final class SapoAdminGateway implements SapoGateway
 					]
 				);
 			}
-			$found_order = $this->find_order_by_external_reference(ExternalReference::from_string($reference));
-			if (! is_array($found_order) || $order_id !== trim((string) ($found_order['id'] ?? ''))) {
+			// As with customers, the order collection can lag immediately after a
+			// create. Verify the lookup contract through the stable resource endpoint.
+			$found_order = $this->get_order($order_id);
+			if ($order_id !== trim((string) ($found_order['id'] ?? ''))) {
 				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Order contract lookup did not return the created order.');
 			}
 			$state = $this->get_order_state($order_id);
@@ -561,6 +563,27 @@ final class SapoAdminGateway implements SapoGateway
 		);
 
 		return ResponseValidator::object($body['customer'] ?? $body, 'customer');
+	}
+
+	/**
+	 * Read an order by its stable resource ID.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function get_order(string $sapo_order_id): array
+	{
+		$sapo_order_id = trim($sapo_order_id);
+		if ('' === $sapo_order_id) {
+			throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Sapo order ID is required.');
+		}
+
+		$body = $this->request_object(
+			'GET',
+			'/admin/orders/' . rawurlencode($sapo_order_id) . '.json',
+			'order'
+		);
+
+		return ResponseValidator::object($body['order'] ?? $body, 'order');
 	}
 
 	public function find_order_by_external_reference(ExternalReference $reference): ?array
