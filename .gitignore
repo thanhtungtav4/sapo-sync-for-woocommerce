@@ -1,7 +1,0 @@
-.DS_Store
-.idea/
-.vscode/
-vendor/
-node_modules/
-coverage/
-*.log

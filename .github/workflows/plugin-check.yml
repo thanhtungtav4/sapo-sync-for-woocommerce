@@ -31,4 +31,5 @@ jobs:
         with:
           build-dir: .
           exclude-directories: |
+            .github
             tests
