@@ -21,6 +21,8 @@ defined('ABSPATH') || exit;
 
 final class CheckoutLocationAllocator
 {
+	private const MAX_LOCATION_PAGES = 100;
+
 	private SapoGateway $gateway;
 
 	private ProductMappingRepository $mappings;
@@ -101,7 +103,8 @@ final class CheckoutLocationAllocator
 			$remote_locations = [];
 			$cursor = null;
 			$seen = [];
-			for ($page = 0; $page < 100; $page++) {
+			$location_pagination_complete = false;
+			for ($page = 0; $page < self::MAX_LOCATION_PAGES; $page++) {
 				$response = $this->gateway->list_locations($cursor);
 				foreach ((array) ($response['items'] ?? []) as $item) {
 					if (is_array($item)) {
@@ -109,11 +112,18 @@ final class CheckoutLocationAllocator
 					}
 				}
 				$next = isset($response['next_cursor']) && null !== $response['next_cursor'] ? (string) $response['next_cursor'] : '';
-				if ('' === $next || isset($seen[$next])) {
+				if ('' === $next) {
+					$location_pagination_complete = true;
 					break;
+				}
+				if (isset($seen[$next])) {
+					throw new SapoException(ErrorCode::CONFLICT, 'Sapo location pagination repeated a cursor.');
 				}
 				$seen[$next] = true;
 				$cursor = $next;
+			}
+			if (! $location_pagination_complete) {
+				throw new SapoException(ErrorCode::CONFLICT, 'Sapo location list exceeds the safe pagination limit.');
 			}
 			$locations = InventoryLocationPolicy::resolve($remote_locations);
 			if ([] === $locations) {

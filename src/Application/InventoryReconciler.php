@@ -9,6 +9,8 @@ namespace WooSapoSync\Application;
 
 use WooSapoSync\Contracts\SapoGateway;
 use WooSapoSync\Domain\Inventory\StockAvailabilityCalculator;
+use WooSapoSync\Infrastructure\Sapo\ErrorCode;
+use WooSapoSync\Infrastructure\Sapo\Exception\SapoException;
 use WooSapoSync\Infrastructure\WordPress\InventoryLocationPolicy;
 use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
 use WooSapoSync\Infrastructure\WooCommerce\ProductStockUpdater;
@@ -17,6 +19,8 @@ defined('ABSPATH') || exit;
 
 final class InventoryReconciler
 {
+	private const MAX_LOCATION_PAGES = 100;
+
 	private SapoGateway $gateway;
 
 	private ProductMappingRepository $mappings;
@@ -44,7 +48,8 @@ final class InventoryReconciler
 		$remote_location_items = [];
 		$cursor = null;
 		$seen_cursors = [];
-		for ($page = 0; $page < 100; $page++) {
+		$location_pagination_complete = false;
+		for ($page = 0; $page < self::MAX_LOCATION_PAGES; $page++) {
 			$remote_locations = $this->gateway->list_locations($cursor);
 			$items = (array) ($remote_locations['items'] ?? $remote_locations);
 			foreach ($items as $item) {
@@ -53,11 +58,18 @@ final class InventoryReconciler
 				}
 			}
 			$next = isset($remote_locations['next_cursor']) && null !== $remote_locations['next_cursor'] ? (string) $remote_locations['next_cursor'] : '';
-			if ('' === $next || isset($seen_cursors[$next])) {
+			if ('' === $next) {
+				$location_pagination_complete = true;
 				break;
+			}
+			if (isset($seen_cursors[$next])) {
+				throw new SapoException(ErrorCode::CONFLICT, 'Sapo location pagination repeated a cursor.');
 			}
 			$seen_cursors[$next] = true;
 			$cursor = $next;
+		}
+		if (! $location_pagination_complete) {
+			throw new SapoException(ErrorCode::CONFLICT, 'Sapo location list exceeds the safe pagination limit.');
 		}
 		$locations = InventoryLocationPolicy::resolve($remote_location_items);
 		$eligible_locations = array_values(array_filter($locations, static fn (array $location): bool => ! empty($location['serves'])));
