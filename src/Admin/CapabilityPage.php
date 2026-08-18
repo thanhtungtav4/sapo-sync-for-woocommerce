@@ -60,6 +60,11 @@ final class CapabilityPage
 
 		$snapshot = CapabilityGate::snapshot();
 		$passed = CapabilityGate::is_passed();
+		$settings = get_option(Settings::OPTION_KEY, []);
+		$settings = is_array($settings) ? $settings : [];
+		$cron_mode = Settings::cron_mode();
+		$cron_secret = Settings::cron_secret();
+		$connection_configured = ConnectionSettings::is_configured();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__('Sapo Sync for WooCommerce', 'sapo-sync-for-woocommerce'); ?></h1>
@@ -70,28 +75,34 @@ final class CapabilityPage
 			<?php elseif (isset($_GET['woo_sapo_order_verify_error'])) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html__('Order contract smoke test thất bại. Capability ghi đơn vẫn bị khóa; kiểm tra quyền Order và log Sapo.', 'sapo-sync-for-woocommerce'); ?></p></div>
 			<?php endif; ?>
-			<p>
+			<div class="notice <?php echo $passed ? 'notice-success' : ($connection_configured ? 'notice-info' : 'notice-warning'); ?> inline">
+				<p>
 				<?php
 				echo esc_html(
 					$passed
-						? __('Capability gate đã đạt. Luồng order ghi có thể chạy qua adapter đã được smoke test.', 'sapo-sync-for-woocommerce')
-						: (ConnectionSettings::is_configured()
-							? __('Read-side đã sẵn sàng: mapping và tồn chạy qua webhook/polling. Đồng bộ ghi đơn vẫn khóa cho tới khi đủ capability Sapo Omni/POS.', 'sapo-sync-for-woocommerce')
-							: __('Chưa có connection. Nhập credential Sapo bên dưới để bật read-side mapping/tồn; thao tác ghi đơn chỉ mở sau khi đủ capability.', 'sapo-sync-for-woocommerce'))
+						? __('Sẵn sàng đồng bộ production: capability Sapo đã được xác minh.', 'sapo-sync-for-woocommerce')
+						: ($connection_configured
+							? __('Đã lưu kết nối Sapo. Hãy kiểm tra quyền để bật các luồng đồng bộ phù hợp.', 'sapo-sync-for-woocommerce')
+							: __('Chưa kết nối Sapo. Plugin chưa thực hiện đồng bộ nào; nhập credential bên dưới để bắt đầu.', 'sapo-sync-for-woocommerce'))
 				);
 				?>
-			</p>
+				</p>
+			</div>
 			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 				<input type="hidden" name="action" value="woo_sapo_verify_capabilities" />
 				<?php wp_nonce_field('woo_sapo_verify_capabilities'); ?>
-				<?php submit_button(__('Chạy kiểm tra capability', 'sapo-sync-for-woocommerce'), 'secondary', 'submit', false); ?>
+				<?php submit_button(__('Kiểm tra kết nối & quyền Sapo', 'sapo-sync-for-woocommerce'), 'primary', 'submit', false); ?>
 			</form>
-			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 8px;">
-				<input type="hidden" name="action" value="woo_sapo_verify_order_contract" />
-				<?php wp_nonce_field('woo_sapo_verify_order_contract'); ?>
-				<?php submit_button(__('Chạy smoke test order (tạo + hủy test)', 'sapo-sync-for-woocommerce'), 'secondary', 'submit', false); ?>
-				<p class="description" style="display:inline-block; margin-left:8px;"><?php echo esc_html__('Dùng order test, tắt webhook/receipt và inventory_behaviour=bypass; chỉ bật sau khi connection/read capability đã hoạt động.', 'sapo-sync-for-woocommerce'); ?></p>
-			</form>
+			<details style="max-width: 960px; margin: 16px 0;">
+				<summary><strong><?php echo esc_html__('Contract test order (nâng cao)', 'sapo-sync-for-woocommerce'); ?></strong></summary>
+				<p class="notice notice-warning inline"><strong><?php echo esc_html__('Chỉ dùng khi cần xác minh quyền ghi production.', 'sapo-sync-for-woocommerce'); ?></strong> <?php echo esc_html__('Plugin sẽ tạo rồi hủy một order test trên Sapo; không dùng trong giờ cao điểm.', 'sapo-sync-for-woocommerce'); ?></p>
+				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+					<input type="hidden" name="action" value="woo_sapo_verify_order_contract" />
+					<?php wp_nonce_field('woo_sapo_verify_order_contract'); ?>
+					<?php submit_button(__('Chạy contract test tạo + hủy order', 'sapo-sync-for-woocommerce'), 'secondary', 'submit', false); ?>
+				</form>
+				<p class="description"><?php echo esc_html__('Test dùng order test, tắt webhook/receipt và inventory_behaviour=bypass. Capability ghi đơn chỉ mở khi test hoàn tất.', 'sapo-sync-for-woocommerce'); ?></p>
+			</details>
 			<table class="widefat striped" style="max-width: 960px">
 				<thead>
 					<tr>
@@ -112,9 +123,8 @@ final class CapabilityPage
 				<?php endforeach; ?>
 				</tbody>
 			</table>
-			<?php $settings = get_option(Settings::OPTION_KEY, []); ?>
 			<?php $connection = ConnectionSettings::get(); ?>
-			<h2><?php echo esc_html__('Cấu hình an toàn', 'sapo-sync-for-woocommerce'); ?></h2>
+			<h2><?php echo esc_html__('Cấu hình production', 'sapo-sync-for-woocommerce'); ?></h2>
 			<form method="post" action="options.php" style="max-width: 960px">
 				<?php settings_fields('woo_sapo_sync_settings_group'); ?>
 				<table class="form-table" role="presentation">
@@ -236,6 +246,38 @@ final class CapabilityPage
 							<p class="description"><?php echo esc_html__('Webhook product/store sẽ kích hoạt đồng bộ gần realtime; tồn kho vẫn polling mỗi phút để dự phòng. Giữ Shadow cho tới khi contract test và reconciliation đạt.', 'sapo-sync-for-woocommerce'); ?></p>
 						</td>
 					</tr>
+					<tr>
+						<th scope="row"><label for="sapo-sync-for-woocommerce-cron-mode"><?php echo esc_html__('Cách chạy nền', 'sapo-sync-for-woocommerce'); ?></label></th>
+						<td>
+							<select id="sapo-sync-for-woocommerce-cron-mode" name="<?php echo esc_attr(Settings::OPTION_KEY); ?>[cron_mode]">
+								<option value="automatic" <?php selected($cron_mode, Settings::CRON_MODE_AUTOMATIC); ?>><?php echo esc_html__('Automatic — Action Scheduler/WP-Cron', 'sapo-sync-for-woocommerce'); ?></option>
+								<option value="external" <?php selected($cron_mode, Settings::CRON_MODE_EXTERNAL); ?>><?php echo esc_html__('External — chỉ chạy qua cron bên ngoài', 'sapo-sync-for-woocommerce'); ?></option>
+								<option value="hybrid" <?php selected($cron_mode, Settings::CRON_MODE_HYBRID); ?>><?php echo esc_html__('Hybrid — tự động và cron bên ngoài', 'sapo-sync-for-woocommerce'); ?></option>
+							</select>
+							<p class="description"><?php echo esc_html__('External phù hợp khi WP-Cron bị tắt: cron server gọi endpoint có token bên dưới. Hybrid giữ lịch tự động làm dự phòng.', 'sapo-sync-for-woocommerce'); ?></p>
+						</td>
+					</tr>
+					<?php if (Settings::external_cron_enabled()) : ?>
+						<tr>
+							<th scope="row"><label for="sapo-sync-for-woocommerce-cron-secret"><?php echo esc_html__('External cron token', 'sapo-sync-for-woocommerce'); ?></label></th>
+							<td>
+								<input id="sapo-sync-for-woocommerce-cron-secret" type="password" class="regular-text" autocomplete="new-password" name="<?php echo esc_attr(Settings::CRON_SECRET_OPTION); ?>" value="" />
+								<p class="description"><?php echo esc_html__('Đặt một token riêng cho cron server. Để trống để giữ token hiện tại; không dùng lại Sapo API key hoặc webhook secret.', 'sapo-sync-for-woocommerce'); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php echo esc_html__('Lệnh cron bên ngoài', 'sapo-sync-for-woocommerce'); ?></th>
+							<td>
+								<?php $cron_endpoint = function_exists('rest_url') ? rest_url('woo-sapo/v1/cron') : ''; ?>
+								<?php if ('' !== $cron_secret && '' !== $cron_endpoint) : ?>
+									<p><code>curl -fsS -X POST -H 'Authorization: Bearer YOUR_CRON_TOKEN' <?php echo esc_html($cron_endpoint); ?></code></p>
+									<p class="description"><?php echo esc_html__('Thay YOUR_CRON_TOKEN bằng token đã lưu. Chạy mỗi phút để xử lý tồn, mapping, webhook inbox và queue đơn hàng.', 'sapo-sync-for-woocommerce'); ?></p>
+								<?php else : ?>
+									<p class="notice notice-warning inline"><strong><?php echo esc_html__('Chưa có lệnh chạy.', 'sapo-sync-for-woocommerce'); ?></strong> <?php echo esc_html__('Lưu External cron token trước để plugin tạo lệnh gọi an toàn.', 'sapo-sync-for-woocommerce'); ?></p>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endif; ?>
 					<tr>
 						<th scope="row"><label for="sapo-sync-for-woocommerce-secret"><?php echo esc_html__('Webhook secret', 'sapo-sync-for-woocommerce'); ?></label></th>
 						<td>

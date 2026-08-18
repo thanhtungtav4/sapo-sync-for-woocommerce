@@ -22,6 +22,7 @@ use WooSapoSync\Infrastructure\WooCommerce\CatalogReader;
 use WooSapoSync\Infrastructure\WordPress\ActionScheduler\Queue;
 use WooSapoSync\Infrastructure\WooCommerce\OrderSnapshotBuilder;
 use WooSapoSync\Webhook\RestController;
+use WooSapoSync\Cron\ExternalCronController;
 use WooSapoSync\Admin\ConnectionSettings;
 
 defined('ABSPATH') || exit;
@@ -55,6 +56,7 @@ final class Plugin
 		CapabilityPage::register();
 		OperationsPage::register();
 		MappingPage::register();
+		add_action('rest_api_init', [ExternalCronController::class, 'register']);
 
 		if (! class_exists('WooCommerce')) {
 			add_action('admin_notices', [self::class, 'woocommerce_required_notice']);

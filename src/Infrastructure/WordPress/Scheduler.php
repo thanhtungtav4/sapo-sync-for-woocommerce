@@ -7,6 +7,8 @@
 
 namespace WooSapoSync\Infrastructure\WordPress;
 
+use WooSapoSync\Admin\Settings;
+
 defined('ABSPATH') || exit;
 
 final class Scheduler
@@ -36,6 +38,13 @@ final class Scheduler
 			return;
 		}
 		self::$registered = true;
+
+		// In external mode the dedicated REST runner invokes these hooks. Do not
+		// leave recurring WP-Cron/Action Scheduler entries behind as a second source
+		// of writes, while hybrid mode deliberately keeps both execution paths.
+		if (Settings::CRON_MODE_EXTERNAL === Settings::cron_mode()) {
+			return;
+		}
 
 		if (function_exists('as_schedule_recurring_action')) {
 			if (! function_exists('as_has_scheduled_action') || ! as_has_scheduled_action(self::INVENTORY_HOOK, [], self::GROUP)) {

@@ -18,7 +18,7 @@ Highlights:
 
 * SKU-first mapping for simple products and variations.
 * Branch-aware inventory reconciliation with Shadow and Write modes.
-* Action Scheduler support with WP-Cron fallback.
+* Automatic, External and Hybrid execution profiles for Action Scheduler/WP-Cron.
 * Idempotent order outbox with retries, leases and duplicate protection.
 * Capability verification before enabling order write operations.
 * HMAC or signed-token webhook intake with polling fallback.
@@ -33,6 +33,11 @@ Combo/bundle products and price-list synchronization are intentionally outside t
 3. Activate Sapo Sync for WooCommerce.
 4. Open WooCommerce > Sapo Sync and follow the connection guide.
 5. Keep inventory in Shadow mode until mappings and the Sapo contract test pass.
+
+If WP-Cron is disabled, open WooCommerce > Sapo Sync, choose External or Hybrid, set a dedicated cron
+token, and call the displayed REST endpoint from the server every minute:
+
+`curl -fsS -X POST -H 'Authorization: Bearer YOUR_CRON_TOKEN' https://example.com/wp-json/woo-sapo/v1/cron`
 
 == Upgrading from an earlier build ==
 
@@ -52,7 +57,9 @@ No. The stable scope maps products by SKU and synchronizes operational inventory
 
 = Is inventory real-time? =
 
-Webhooks trigger an immediate reconciliation when available. A one-minute Action Scheduler/WP-Cron reconciliation remains the safety net.
+Webhooks trigger an immediate reconciliation when available. A one-minute Action Scheduler/WP-Cron
+reconciliation remains the safety net. If WP-Cron is disabled, use the External or Hybrid profile and
+call the authenticated runner from a system cron.
 
 = Does the plugin support bundles? =
 
@@ -91,6 +98,8 @@ Sapo is an external service. Its terms and privacy policies apply to data proces
 = 0.5.0 =
 * Renamed the public plugin and slug to Sapo Sync for WooCommerce for WordPress.org trademark compliance.
 * Updated the Plugin Check workflow and resolved current WordPress 7.0/readme compatibility findings.
+* Added production execution profiles and an authenticated external cron runner.
+* Moved the reversible order contract smoke test into an Advanced section in the admin UI.
 
 = 0.4.5 =
 * Matched the contributor field to the WordPress.org account `nttungdev`.

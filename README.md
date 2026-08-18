@@ -4,7 +4,7 @@ Plugin tích hợp WooCommerce với Sapo Omni/POS, không phụ thuộc theme h
 
 ## Trạng thái
 
-Phiên bản `0.4.0` bổ sung hardening cho reconciliation, order contract và event delivery:
+Phiên bản `0.5.0` bổ sung production execution profile và hardening cho reconciliation, order contract và event delivery:
 
 - Có plugin header hợp lệ để WordPress nhận diện plugin.
 - Có autoload/bootstrap, activation migration và ba bảng mapping–outbox–event inbox.
@@ -23,6 +23,10 @@ Phiên bản `0.4.0` bổ sung hardening cho reconciliation, order contract và 
   create-and-approve dùng `POST /admin/orders.json` (Sapo demo tự xác nhận order) và cancel
   `order_cancel.cancel_reason`; capability chỉ mở sau nút smoke test tạo + hủy order test trên
   connection hiện tại.
+- Có ba execution profile: Automatic (Action Scheduler/WP-Cron), External (cron server gọi REST runner)
+  và Hybrid (cả hai). External runner dùng token riêng, job lock và chạy reconciliation/queue idempotent.
+- Màn hình quản trị ưu tiên trạng thái production; contract test tạo + hủy order được chuyển vào mục
+  Advanced để không nhầm với luồng đồng bộ hằng ngày.
 
 Giữ chế độ Shadow trong giai đoạn đối soát; chỉ bật Write sau khi mapping và contract test đạt.
 
@@ -60,12 +64,14 @@ external reference, phân kho không tách đơn, mapping trạng thái và adap
 - `src/Application/InventoryReconciler.php`: đọc `available` theo location, shadow reconciliation và chỉ ghi Woo khi bật write mode.
 - Location policy fail-closed: chưa allowlist chi nhánh hoặc thiếu response tồn thì không ghi Woo về 0.
 - `src/Application/MappingSynchronizer.php`: quét catalog Woo/Sapo theo trang, lưu mapping SKU và bảo toàn mapping cũ khi cần duyệt.
-- `src/Admin/Settings.php`: cấu hình shadow/write, webhook secret (không echo lại) và location policy JSON.
+- `src/Admin/Settings.php`: cấu hình shadow/write, execution profile, external cron token, webhook secret
+  (không echo lại) và location policy JSON.
 - `src/Admin/ConnectionSettings.php`: lưu base URL HTTPS và thông tin Basic/Bearer ở field mật khẩu; không render lại credential.
 - `src/Infrastructure/WordPress/SyncLogger.php`: log vận hành qua Woo logger, có correlation ID và che dữ liệu nhạy cảm.
 - `src/Admin/OperationsPage.php`: dashboard backlog/status mapping–outbox–event inbox, không hiển thị payload/credentials.
 - `src/Admin/MappingPage.php`: tìm/lọc mapping theo SKU/trạng thái và liên kết thủ công có nonce, kiểm tra trùng Sapo variant.
 - `src/Infrastructure/WordPress/Scheduler.php`: lịch inventory reconciliation mỗi phút bằng Action Scheduler hoặc WP-Cron fallback; webhook vẫn là đường nhanh hơn.
+- `src/Cron/ExternalCronController.php`: REST runner có token cho máy chủ cron bên ngoài khi WP-Cron bị tắt.
 - Mapping reconciliation nightly được chạy cùng scheduler để phát hiện SKU đổi/trùng/mất.
 - `src/Admin/CapabilityPage.php`: trang chẩn đoán capability, không cho phép đánh dấu thủ công.
 - `src/Application/CapabilityVerifier.php`: probe gateway và ghi kết quả capability; factory dùng `SapoAdminGateway` khi connection đã cấu hình và fail-closed khi chưa có.
@@ -73,6 +79,20 @@ external reference, phân kho không tách đơn, mapping trạng thái và adap
 - `tests/fixtures/contract/` và `tests/FixtureGateway.php`: fixture normalized/harness offline để kiểm tra contract trước khi nối adapter thật.
 - `src/Infrastructure/WordPress/Repository/`: persistence idempotency và dedupe ở database.
 - `src/Domain/`: SKU, product type, price source, allocation và mapping trạng thái độc lập với WordPress.
+
+## Cron bên ngoài
+
+Mở WooCommerce → Sapo Sync, chọn `External` hoặc `Hybrid`, đặt một token riêng rồi lưu cấu hình. Cron
+server gọi endpoint mỗi phút bằng header Bearer:
+
+```bash
+curl -fsS -X POST \
+  -H 'Authorization: Bearer YOUR_CRON_TOKEN' \
+  https://example.com/wp-json/woo-sapo/v1/cron
+```
+
+Runner trả HTTP `202`, chạy inventory/mapping/event reconciliation và giải phóng queue Action
+Scheduler/WP-Cron. Không đưa token vào URL hoặc commit token vào repository.
 
 ## Phạm vi MVP
 
