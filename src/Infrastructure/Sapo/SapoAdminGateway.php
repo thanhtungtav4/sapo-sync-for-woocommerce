@@ -128,6 +128,12 @@ final class SapoAdminGateway implements SapoGateway
 			];
 			$contract_capabilities = CapabilityGate::order_contract_capabilities();
 			foreach ($contract_capabilities as $capability => $verified) {
+				// The read probe above is authoritative for customer data access.
+				// The order contract also exercises customer write/lookup, but must
+				// not downgrade a successfully verified customer-read capability.
+				if ('customers' === $capability) {
+					continue;
+				}
 				if (! array_key_exists($capability, $capabilities)) {
 					continue;
 				}
