@@ -26,6 +26,7 @@ use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
 use WooSapoSync\Admin\ConnectionSettings;
 use WooSapoSync\Application\CapabilityGate;
 use WooSapoSync\Infrastructure\WordPress\InventoryLocationPolicy;
+use WooSapoSync\Infrastructure\WordPress\ActionScheduler\Queue;
 use WooSapoSync\Webhook\WebhookEventNormalizer;
 use WooSapoSync\Webhook\WebhookSignature;
 
@@ -129,6 +130,33 @@ if (! function_exists('current_time')) {
 if (! function_exists('sanitize_textarea_field')) {
 	function sanitize_textarea_field($value) { return trim(strip_tags((string) $value)); }
 }
+if (! function_exists('as_has_scheduled_action')) {
+	$GLOBALS['woo_sapo_test_actions'] = [];
+	$GLOBALS['woo_sapo_test_action_fail'] = false;
+	function as_has_scheduled_action($hook, $args = [], $group = '') {
+		foreach ($GLOBALS['woo_sapo_test_actions'] as $action) {
+			if ($action['hook'] === $hook && $action['args'] === $args && $action['group'] === $group) {
+				return true;
+			}
+		}
+		return false;
+	}
+	function as_schedule_single_action($timestamp, $hook, $args = [], $group = '', $unique = false) {
+		if ($GLOBALS['woo_sapo_test_action_fail']) {
+			return 0;
+		}
+		$GLOBALS['woo_sapo_test_actions'][] = ['hook' => $hook, 'args' => $args, 'group' => $group];
+		return count($GLOBALS['woo_sapo_test_actions']);
+	}
+	function as_enqueue_async_action($hook, $args = [], $group = '', $unique = false) {
+		return as_schedule_single_action(time(), $hook, $args, $group, $unique);
+	}
+}
+$GLOBALS['woo_sapo_test_action_fail'] = true;
+$assert(! Queue::enqueue_order_after(101, 1), 'queue reports Action Scheduler failure');
+$GLOBALS['woo_sapo_test_action_fail'] = false;
+$assert(Queue::enqueue_order_after(101, 1), 'queue accepts a scheduled Action Scheduler job');
+$assert(Queue::enqueue_order_after(101, 1), 'queue treats an existing unique job as accepted');
 $verified_capabilities = [];
 foreach (CapabilityGate::REQUIRED_CAPABILITIES as $capability) {
 	$verified_capabilities[$capability] = ['verified' => true, 'verified_at' => '2026-01-01 00:00:00', 'notes' => 'fixture'];

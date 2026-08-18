@@ -34,13 +34,21 @@ final class Queue
 
 		$delay_seconds = max(1, $delay_seconds);
 		if (function_exists('as_schedule_single_action')) {
-			as_schedule_single_action(time() + $delay_seconds, self::PROCESS_ORDER_HOOK, ['operation_id' => $operation_id], 'sapo-sync-for-woocommerce', true);
-			return true;
+			$args = ['operation_id' => $operation_id];
+			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action(self::PROCESS_ORDER_HOOK, $args, 'sapo-sync-for-woocommerce')) {
+				return true;
+			}
+			$result = as_schedule_single_action(time() + $delay_seconds, self::PROCESS_ORDER_HOOK, $args, 'sapo-sync-for-woocommerce', true);
+			return self::action_scheduled($result, self::PROCESS_ORDER_HOOK, $args);
 		}
 
 		if (function_exists('wp_schedule_single_event')) {
-			wp_schedule_single_event(time() + $delay_seconds, self::PROCESS_ORDER_HOOK, [$operation_id]);
-			return true;
+			$args = [$operation_id];
+			if (function_exists('wp_next_scheduled') && wp_next_scheduled(self::PROCESS_ORDER_HOOK, $args)) {
+				return true;
+			}
+			$result = wp_schedule_single_event(time() + $delay_seconds, self::PROCESS_ORDER_HOOK, $args);
+			return false !== $result || (function_exists('wp_next_scheduled') && (bool) wp_next_scheduled(self::PROCESS_ORDER_HOOK, $args));
 		}
 
 		return false;
@@ -60,23 +68,26 @@ final class Queue
 		$delay_seconds = max(1, $delay_seconds);
 
 		if (function_exists('as_enqueue_async_action')) {
-			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action('woo_sapo_sync_process_event', ['event_key' => $event_key], 'sapo-sync-for-woocommerce')) {
+			$args = ['event_key' => $event_key];
+			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action('woo_sapo_sync_process_event', $args, 'sapo-sync-for-woocommerce')) {
 				return true;
 			}
+			$result = null;
 			if ($delay_seconds > 1 && function_exists('as_schedule_single_action')) {
-				as_schedule_single_action(time() + $delay_seconds, 'woo_sapo_sync_process_event', ['event_key' => $event_key], 'sapo-sync-for-woocommerce', true);
+				$result = as_schedule_single_action(time() + $delay_seconds, 'woo_sapo_sync_process_event', $args, 'sapo-sync-for-woocommerce', true);
 			} else {
-				as_enqueue_async_action('woo_sapo_sync_process_event', ['event_key' => $event_key], 'sapo-sync-for-woocommerce', true);
+				$result = as_enqueue_async_action('woo_sapo_sync_process_event', $args, 'sapo-sync-for-woocommerce', true);
 			}
-			return true;
+			return self::action_scheduled($result, 'woo_sapo_sync_process_event', $args);
 		}
 
 		if (function_exists('wp_schedule_single_event')) {
-			if (function_exists('wp_next_scheduled') && wp_next_scheduled('woo_sapo_sync_process_event', [$event_key])) {
+			$args = [$event_key];
+			if (function_exists('wp_next_scheduled') && wp_next_scheduled('woo_sapo_sync_process_event', $args)) {
 				return true;
 			}
-			wp_schedule_single_event(time() + $delay_seconds, 'woo_sapo_sync_process_event', [$event_key]);
-			return true;
+			$result = wp_schedule_single_event(time() + $delay_seconds, 'woo_sapo_sync_process_event', $args);
+			return false !== $result || (function_exists('wp_next_scheduled') && (bool) wp_next_scheduled('woo_sapo_sync_process_event', $args));
 		}
 
 		return false;
@@ -85,19 +96,21 @@ final class Queue
 	public static function enqueue_inventory(): bool
 	{
 		if (function_exists('as_enqueue_async_action')) {
-			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action(Scheduler::INVENTORY_HOOK, [], 'sapo-sync-for-woocommerce')) {
+			$args = [];
+			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action(Scheduler::INVENTORY_HOOK, $args, 'sapo-sync-for-woocommerce')) {
 				return true;
 			}
-			as_enqueue_async_action(Scheduler::INVENTORY_HOOK, [], 'sapo-sync-for-woocommerce', true);
-			return true;
+			$result = as_enqueue_async_action(Scheduler::INVENTORY_HOOK, $args, 'sapo-sync-for-woocommerce', true);
+			return self::action_scheduled($result, Scheduler::INVENTORY_HOOK, $args);
 		}
 
 		if (function_exists('wp_schedule_single_event')) {
-			if (function_exists('wp_next_scheduled') && wp_next_scheduled(Scheduler::INVENTORY_HOOK)) {
+			$args = [];
+			if (function_exists('wp_next_scheduled') && wp_next_scheduled(Scheduler::INVENTORY_HOOK, $args)) {
 				return true;
 			}
-			wp_schedule_single_event(time() + 1, Scheduler::INVENTORY_HOOK);
-			return true;
+			$result = wp_schedule_single_event(time() + 1, Scheduler::INVENTORY_HOOK, $args);
+			return false !== $result || (function_exists('wp_next_scheduled') && (bool) wp_next_scheduled(Scheduler::INVENTORY_HOOK, $args));
 		}
 
 		return false;
@@ -106,21 +119,43 @@ final class Queue
 	public static function enqueue_mapping(): bool
 	{
 		if (function_exists('as_enqueue_async_action')) {
-			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action(self::PROCESS_MAPPING_HOOK, [], 'sapo-sync-for-woocommerce')) {
+			$args = [];
+			if (function_exists('as_has_scheduled_action') && as_has_scheduled_action(self::PROCESS_MAPPING_HOOK, $args, 'sapo-sync-for-woocommerce')) {
 				return true;
 			}
-			as_enqueue_async_action(self::PROCESS_MAPPING_HOOK, [], 'sapo-sync-for-woocommerce', true);
-			return true;
+			$result = as_enqueue_async_action(self::PROCESS_MAPPING_HOOK, $args, 'sapo-sync-for-woocommerce', true);
+			return self::action_scheduled($result, self::PROCESS_MAPPING_HOOK, $args);
 		}
 
 		if (function_exists('wp_schedule_single_event')) {
-			if (function_exists('wp_next_scheduled') && wp_next_scheduled(self::PROCESS_MAPPING_HOOK)) {
+			$args = [];
+			if (function_exists('wp_next_scheduled') && wp_next_scheduled(self::PROCESS_MAPPING_HOOK, $args)) {
 				return true;
 			}
-			wp_schedule_single_event(time() + 1, self::PROCESS_MAPPING_HOOK);
-			return true;
+			$result = wp_schedule_single_event(time() + 1, self::PROCESS_MAPPING_HOOK, $args);
+			return false !== $result || (function_exists('wp_next_scheduled') && (bool) wp_next_scheduled(self::PROCESS_MAPPING_HOOK, $args));
 		}
 
 		return false;
+	}
+
+	/**
+	 * Action Scheduler returns an action ID (or zero on failure/duplicate). A
+	 * post-write lookup handles the race where another request enqueues the same
+	 * unique action between our pre-check and schedule call.
+	 *
+	 * @param mixed $result
+	 * @param array<string, mixed> $args
+	 */
+	private static function action_scheduled($result, string $hook, array $args): bool
+	{
+		if (is_numeric($result) && (int) $result > 0) {
+			return true;
+		}
+		if (false !== $result && ! is_numeric($result) && null !== $result) {
+			return true;
+		}
+
+		return function_exists('as_has_scheduled_action') && (bool) as_has_scheduled_action($hook, $args, 'sapo-sync-for-woocommerce');
 	}
 }

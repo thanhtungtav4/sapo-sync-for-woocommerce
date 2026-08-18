@@ -7,10 +7,13 @@
 
 namespace WooSapoSync\Admin;
 
+use WooSapoSync\Application\CapabilityGate;
 use WooSapoSync\Application\GatewayFactory;
 use WooSapoSync\Domain\Product\MappingStatus;
 use WooSapoSync\Domain\Sku\SkuNormalizer;
 use WooSapoSync\Contracts\SapoGateway;
+use WooSapoSync\Infrastructure\Sapo\ErrorCode;
+use WooSapoSync\Infrastructure\Sapo\Exception\SapoException;
 use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
 
 defined('ABSPATH') || exit;
@@ -139,6 +142,11 @@ final class MappingPage
 		$remote = null;
 		try {
 			$remote = self::find_remote_variant(GatewayFactory::make(), $sapo_product_id, $sapo_variant_id);
+		} catch (SapoException $exception) {
+			if (ErrorCode::AUTH === $exception->error_code()) {
+				CapabilityGate::invalidate();
+			}
+			$remote = null;
 		} catch (\Throwable $exception) {
 			$remote = null;
 		}

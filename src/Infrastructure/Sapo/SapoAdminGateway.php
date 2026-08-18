@@ -271,6 +271,7 @@ final class SapoAdminGateway implements SapoGateway
 			if ($order_id !== (string) ($state['order_id'] ?? '') || 'approved' !== (string) ($state['order'] ?? '')) {
 				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Order contract detail did not map to an approved order.');
 			}
+			$verified_order_id = $order_id;
 
 			$cancelled = $this->request_object(
 				'POST',
@@ -282,7 +283,7 @@ final class SapoAdminGateway implements SapoGateway
 			$order_id = '';
 
 			return [
-				'order_id' => $order_id,
+				'order_id' => $verified_order_id,
 				'create_status' => (string) ($order['status'] ?? ''),
 				'cancel_status' => 'cancelled',
 				'capabilities' => [
