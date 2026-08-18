@@ -317,6 +317,7 @@ $assert(null === WebhookEventNormalizer::normalize(['event_type' => 'order.updat
 $assert('+84901234567' === CustomerNormalizer::phone('090 123 45 67'), 'Vietnamese phone is normalized to E.164-like value');
 $assert('+84901234567' === CustomerNormalizer::phone('+84 90 123 45 67'), 'international phone keeps country code');
 $assert('customer@example.com' === CustomerNormalizer::email(' Customer@Example.COM '), 'customer email is normalized');
+$assert('Hồ Chí Minh' === CustomerNormalizer::province('HCM') && 'Hồ Chí Minh' === CustomerNormalizer::province('Hồ Chí Minh'), 'Vietnamese province codes are normalized for Sapo');
 $valid_order = [
 	'woo_order_id' => 10,
 	'status' => 'processing',

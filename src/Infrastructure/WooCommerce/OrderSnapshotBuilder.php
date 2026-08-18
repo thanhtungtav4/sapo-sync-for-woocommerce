@@ -115,7 +115,7 @@ final class OrderSnapshotBuilder
 			'address1' => $get($order, 'get_' . $prefix . '_address_1'),
 			'address2' => $get($order, 'get_' . $prefix . '_address_2'),
 			'city' => $get($order, 'get_' . $prefix . '_city'),
-			'province' => $get($order, 'get_' . $prefix . '_state'),
+			'province' => CustomerNormalizer::province($get($order, 'get_' . $prefix . '_state')),
 			'zip' => $get($order, 'get_' . $prefix . '_postcode'),
 			'country' => $get($order, 'get_' . $prefix . '_country'),
 			'phone' => 'billing' === $prefix ? $get($order, 'get_billing_phone') : $get($order, 'get_shipping_phone'),
