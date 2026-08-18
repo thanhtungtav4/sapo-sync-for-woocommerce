@@ -33,12 +33,19 @@ final class WordPressHttpTransport implements HttpTransport
 		$args = [
 			'method' => strtoupper($method),
 			'timeout' => $this->timeout,
-			'headers' => array_merge(['Accept' => 'application/json'], $headers),
+			'headers' => array_merge(
+				[
+					'Accept' => 'application/json',
+					// Sapo's Private App contract expects JSON for every Admin API request,
+					// including read-only probes that do not carry a body.
+					'Content-Type' => 'application/json',
+				],
+				$headers
+			),
 			'data_format' => 'body',
 		];
 
 		if (null !== $body) {
-			$args['headers']['Content-Type'] = 'application/json';
 			$args['body'] = wp_json_encode($body);
 		}
 
