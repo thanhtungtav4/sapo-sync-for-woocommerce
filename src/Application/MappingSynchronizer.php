@@ -10,6 +10,8 @@ namespace WooSapoSync\Application;
 use WooSapoSync\Contracts\SapoGateway;
 use WooSapoSync\Domain\Product\MappingMatcher;
 use WooSapoSync\Domain\Product\MappingStatus;
+use WooSapoSync\Infrastructure\Sapo\ErrorCode;
+use WooSapoSync\Infrastructure\Sapo\Exception\SapoException;
 use WooSapoSync\Infrastructure\WordPress\Repository\ProductMappingRepository;
 use WooSapoSync\Infrastructure\WooCommerce\CatalogReader;
 
@@ -17,6 +19,8 @@ defined('ABSPATH') || exit;
 
 final class MappingSynchronizer
 {
+	private const MAX_SAPO_PAGES = 1000;
+
 	private SapoGateway $gateway;
 
 	private ProductMappingRepository $mappings;
@@ -39,7 +43,7 @@ final class MappingSynchronizer
 		$sapo_items = [];
 		$cursor = null;
 		$seen_cursors = [];
-		for ($page = 0; $page < 100; $page++) {
+		for ($page = 0; $page < self::MAX_SAPO_PAGES; $page++) {
 			$response = $this->gateway->list_variants($cursor);
 			foreach ((array) ($response['items'] ?? []) as $item) {
 				if (is_array($item)) {
@@ -48,11 +52,17 @@ final class MappingSynchronizer
 			}
 
 			$next = isset($response['next_cursor']) && null !== $response['next_cursor'] ? (string) $response['next_cursor'] : '';
-			if ('' === $next || isset($seen_cursors[$next])) {
+			if ('' === $next) {
 				break;
+			}
+			if (isset($seen_cursors[$next])) {
+				throw new SapoException(ErrorCode::CONFLICT, 'Sapo variant pagination repeated a cursor; mapping was not changed.');
 			}
 			$seen_cursors[$next] = true;
 			$cursor = $next;
+		}
+		if ('' !== (string) $cursor && $page >= self::MAX_SAPO_PAGES) {
+			throw new SapoException(ErrorCode::CONFLICT, 'Sapo catalog exceeds the safe mapping page limit; mapping was not changed.');
 		}
 
 		$results = MappingMatcher::match($woo_items, $sapo_items);

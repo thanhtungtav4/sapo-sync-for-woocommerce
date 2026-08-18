@@ -22,35 +22,53 @@ final class CatalogReader
 			return [];
 		}
 
-		$products = wc_get_products([
-			'limit' => -1,
-			'paginate' => false,
-			'status' => ['publish', 'private', 'draft'],
-			'orderby' => 'ID',
-			'order' => 'ASC',
-		]);
 		$items = [];
+		$page = 1;
+		$max_pages = 1;
+		$limit = 250;
 
-		foreach ((array) $products as $product) {
-			if (! is_object($product) || ! method_exists($product, 'get_type')) {
-				continue;
+		do {
+			$result = wc_get_products([
+				'limit' => $limit,
+				'page' => $page,
+				'paginate' => true,
+				'status' => ['publish', 'private', 'draft'],
+				'orderby' => 'ID',
+				'order' => 'ASC',
+			]);
+			if (is_object($result) && isset($result->products)) {
+				$products = (array) $result->products;
+				$max_pages = max($page, (int) ($result->max_num_pages ?? $page));
+			} else {
+				// Older WooCommerce versions may ignore paginate=true and return the
+				// complete result. Treat that as a single page for compatibility.
+				$products = (array) $result;
+				$max_pages = $page;
 			}
 
-			$type = (string) $product->get_type();
-			if ('simple' === $type) {
-				$items[] = $this->snapshot($product, ProductType::SIMPLE, null);
-				continue;
-			}
+			foreach ($products as $product) {
+				if (! is_object($product) || ! method_exists($product, 'get_type')) {
+					continue;
+				}
 
-			if ('variable' === $type && method_exists($product, 'get_children')) {
-				foreach ((array) $product->get_children() as $variation_id) {
-					$variation = function_exists('wc_get_product') ? wc_get_product((int) $variation_id) : null;
-					if (is_object($variation)) {
-						$items[] = $this->snapshot($variation, ProductType::VARIATION, (int) $product->get_id());
+				$type = (string) $product->get_type();
+				if ('simple' === $type) {
+					$items[] = $this->snapshot($product, ProductType::SIMPLE, null);
+					continue;
+				}
+
+				if ('variable' === $type && method_exists($product, 'get_children')) {
+					foreach ((array) $product->get_children() as $variation_id) {
+						$variation = function_exists('wc_get_product') ? wc_get_product((int) $variation_id) : null;
+						if (is_object($variation)) {
+							$items[] = $this->snapshot($variation, ProductType::VARIATION, (int) $product->get_id());
+						}
 					}
 				}
 			}
-		}
+
+			$page++;
+		} while ($page <= $max_pages);
 
 		return array_values(array_filter($items, static fn (array $item): bool => '' !== $item['object_key']));
 	}
