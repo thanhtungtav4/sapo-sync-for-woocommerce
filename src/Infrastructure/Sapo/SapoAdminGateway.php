@@ -209,8 +209,12 @@ final class SapoAdminGateway implements SapoGateway
 			if ('' === $customer_id) {
 				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Customer contract create response has no ID.');
 			}
-			$found_customer = $this->find_customer(['email' => $customer_email]);
-			if (! is_array($found_customer) || $customer_id !== trim((string) ($found_customer['id'] ?? ''))) {
+			// Sapo's collection endpoint is eventually consistent for newly-created
+			// customers and may not return the record during the same request window.
+			// Verify the read contract through the documented resource endpoint instead
+			// of treating a delayed collection response as a failed write contract.
+			$found_customer = $this->get_customer($customer_id);
+			if ($customer_id !== trim((string) ($found_customer['id'] ?? ''))) {
 				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Customer contract lookup did not return the created customer.');
 			}
 			$this->delete_customer($customer_id);
@@ -511,6 +515,31 @@ final class SapoAdminGateway implements SapoGateway
 		);
 
 		return in_array((int) ($response['status'] ?? 0), [200, 204], true);
+	}
+
+	/**
+	 * Read a customer by its stable resource ID.
+	 *
+	 * The collection endpoint can lag immediately after a create. The resource
+	 * endpoint is the authoritative read for the contract test and for any
+	 * future flow that already has a customer ID.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function get_customer(string $sapo_customer_id): array
+	{
+		$sapo_customer_id = trim($sapo_customer_id);
+		if ('' === $sapo_customer_id) {
+			throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Sapo customer ID is required.');
+		}
+
+		$body = $this->request_object(
+			'GET',
+			'/admin/customers/' . rawurlencode($sapo_customer_id) . '.json',
+			'customer'
+		);
+
+		return ResponseValidator::object($body['customer'] ?? $body, 'customer');
 	}
 
 	public function find_order_by_external_reference(ExternalReference $reference): ?array
