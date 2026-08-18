@@ -75,9 +75,17 @@ final class CapabilityPage
 			<?php elseif (isset($_GET['woo_sapo_order_verify_error'])) : ?>
 				<div class="notice notice-error is-dismissible"><p><?php echo esc_html__('Order contract smoke test thất bại. Capability ghi đơn vẫn bị khóa; kiểm tra quyền Order và log Sapo.', 'sapo-sync-for-woocommerce'); ?></p></div>
 			<?php endif; ?>
-			<?php /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce. */ ?>
 			<?php if (isset($_GET['woo_sapo_error_code'])) : ?>
-				<div class="notice notice-warning is-dismissible"><p><?php echo esc_html(sprintf(__('Mã lỗi kết nối Sapo: %s. Đây là mã chẩn đoán, không phải credential.', 'sapo-sync-for-woocommerce'), sanitize_key((string) wp_unslash($_GET['woo_sapo_error_code'])))); ?></p></div>
+				<?php
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only diagnostic redirect flag; the mutating admin-post handler verifies its nonce.
+				$error_code = sanitize_key((string) wp_unslash($_GET['woo_sapo_error_code']));
+				$error_message = sprintf(
+					/* translators: %s: Sanitized Sapo diagnostic error code. */
+					__('Mã lỗi kết nối Sapo: %s. Đây là mã chẩn đoán, không phải credential.', 'sapo-sync-for-woocommerce'),
+					$error_code
+				);
+				?>
+				<div class="notice notice-warning is-dismissible"><p><?php echo esc_html($error_message); ?></p></div>
 			<?php endif; ?>
 			<div class="notice <?php echo $passed ? 'notice-success' : ($connection_configured ? 'notice-info' : 'notice-warning'); ?> inline">
 				<p>
