@@ -35,7 +35,8 @@ Combo/bundle products and price-list synchronization are intentionally outside t
 5. Keep inventory in Shadow mode until mappings and the Sapo contract test pass.
 
 If WP-Cron is disabled, open WooCommerce > Inventory Bridge, choose External or Hybrid, set a dedicated cron
-token, and call the displayed REST endpoint from the server every minute:
+token, and call the displayed REST endpoint from the server every minute. The endpoint runs
+inventory/event work every tick and keeps product mapping reconciliation on its daily cadence:
 
 `curl -fsS -X POST -H 'Authorization: Bearer YOUR_CRON_TOKEN' https://example.com/wp-json/woo-sapo/v1/cron`
 

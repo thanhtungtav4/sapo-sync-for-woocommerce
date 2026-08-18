@@ -94,7 +94,7 @@ final class ExternalCronController
 	 */
 	public static function run($request)
 	{
-		$lock = new JobLock('external-cron', 90);
+		$lock = new JobLock('external-cron', 1800);
 		if (! $lock->acquire()) {
 			return new \WP_REST_Response(
 				[
@@ -107,14 +107,29 @@ final class ExternalCronController
 
 		$started_at = microtime(true);
 		try {
+			if (! $lock->refresh()) {
+				return new \WP_REST_Response(['accepted' => true, 'skipped' => 'lock_lost'], 202);
+			}
 			/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
 			do_action(Scheduler::EVENT_SWEEP_HOOK);
+			if (! $lock->refresh()) {
+				return new \WP_REST_Response(['accepted' => true, 'skipped' => 'lock_lost'], 202);
+			}
 			/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
 			do_action(Scheduler::INVENTORY_HOOK);
-			/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
-			do_action(Scheduler::MAPPING_HOOK);
+			if (Scheduler::external_mapping_due()) {
+				if (! $lock->refresh()) {
+					return new \WP_REST_Response(['accepted' => true, 'skipped' => 'lock_lost'], 202);
+				}
+				/* phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Hook names are plugin-prefixed constants owned by Scheduler. */
+				do_action(Scheduler::MAPPING_HOOK);
+				Scheduler::mark_external_mapping_run();
+			}
 
 			$queue_runner = false;
+			if (! $lock->refresh()) {
+				return new \WP_REST_Response(['accepted' => true, 'skipped' => 'lock_lost'], 202);
+			}
 			if (function_exists('wp_cron')) {
 				wp_cron();
 				$queue_runner = true;

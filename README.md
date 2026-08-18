@@ -91,8 +91,9 @@ curl -fsS -X POST \
   https://example.com/wp-json/woo-sapo/v1/cron
 ```
 
-Runner trả HTTP `202`, chạy inventory/mapping/event reconciliation và giải phóng queue Action
-Scheduler/WP-Cron. Không đưa token vào URL hoặc commit token vào repository.
+Runner trả HTTP `202`, chạy inventory/event reconciliation mỗi tick, mapping theo nhịp hằng ngày
+và giải phóng queue Action Scheduler/WP-Cron. Không đưa token vào URL hoặc commit token vào
+repository.
 
 ## Phạm vi MVP
 

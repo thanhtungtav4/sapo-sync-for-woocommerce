@@ -19,6 +19,8 @@ final class Scheduler
 
 	public const EVENT_SWEEP_HOOK = 'woo_sapo_sync_requeue_events';
 
+	public const EXTERNAL_MAPPING_LAST_OPTION = 'woo_sapo_sync_external_mapping_last';
+
 	private const GROUP = 'sapo-sync-for-woocommerce';
 
 	/** Webhooks trigger an immediate run; this is the inventory safety net. */
@@ -96,5 +98,21 @@ final class Scheduler
 			wp_clear_scheduled_hook(self::MAPPING_HOOK);
 			wp_clear_scheduled_hook(self::EVENT_SWEEP_HOOK);
 		}
+	}
+
+	/**
+	 * External cron has no recurring mapping event, so preserve the daily cadence
+	 * explicitly instead of running a full catalog scan on every minute tick.
+	 */
+	public static function external_mapping_due(): bool
+	{
+		$last = (int) get_option(self::EXTERNAL_MAPPING_LAST_OPTION, 0);
+
+		return $last <= (time() - self::DAILY_INTERVAL);
+	}
+
+	public static function mark_external_mapping_run(): void
+	{
+		update_option(self::EXTERNAL_MAPPING_LAST_OPTION, time(), false);
 	}
 }

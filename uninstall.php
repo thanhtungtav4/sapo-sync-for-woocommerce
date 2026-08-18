@@ -24,6 +24,7 @@ $woo_sapo_option_names = [
 	'woo_sapo_sync_site_uuid',
 	'woo_sapo_sync_location_policy',
 	'woo_sapo_sync_db_version',
+	'woo_sapo_sync_external_mapping_last',
 	'pixelcam_sapo_sync_connection',
 	'pixelcam_sapo_sync_settings',
 	'pixelcam_sapo_sync_capabilities',

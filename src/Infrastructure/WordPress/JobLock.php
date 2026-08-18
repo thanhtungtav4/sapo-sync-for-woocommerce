@@ -17,6 +17,8 @@ final class JobLock
 
 	private int $ttl;
 
+	private string $token = '';
+
 	private bool $held = false;
 
 	public function __construct(string $name, int $ttl = 300)
@@ -47,15 +49,40 @@ final class JobLock
 			return false;
 		}
 
+		$this->token = $token;
 		$this->held = true;
 		return true;
 	}
 
+	/**
+	 * Extend a lock owned by this process before a long phase begins.
+	 */
+	public function refresh(): bool
+	{
+		if (! $this->held || '' === $this->token || ! function_exists('update_option')) {
+			return false;
+		}
+
+		$current = get_option($this->option, []);
+		if (! is_array($current) || ! hash_equals($this->token, (string) ($current['token'] ?? ''))) {
+			$this->held = false;
+			$this->token = '';
+			return false;
+		}
+
+		$current['expires_at'] = time() + $this->ttl;
+		return update_option($this->option, $current, false);
+	}
+
 	public function release(): void
 	{
-		if ($this->held && function_exists('delete_option')) {
-			delete_option($this->option);
+		if ($this->held && '' !== $this->token && function_exists('delete_option')) {
+			$current = get_option($this->option, []);
+			if (is_array($current) && hash_equals($this->token, (string) ($current['token'] ?? ''))) {
+				delete_option($this->option);
+			}
 		}
 		$this->held = false;
+		$this->token = '';
 	}
 }
