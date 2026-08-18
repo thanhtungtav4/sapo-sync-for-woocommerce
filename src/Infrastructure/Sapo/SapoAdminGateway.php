@@ -248,7 +248,16 @@ final class SapoAdminGateway implements SapoGateway
 			$order = ResponseValidator::object($created['order'] ?? null, 'order contract create');
 			$order_id = trim((string) ($order['id'] ?? ''));
 			if ('' === $order_id || empty($order['confirmed']) || '' === trim((string) ($order['processed_on'] ?? ''))) {
-				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(ErrorCode::VALIDATION, 'Order contract create did not return a confirmed and processed order.');
+				throw new \WooSapoSync\Infrastructure\Sapo\Exception\SapoException(
+					ErrorCode::VALIDATION,
+					'Order contract create did not return a confirmed and processed order.',
+					[
+						'order_id' => $order_id,
+						'confirmed' => ! empty($order['confirmed']),
+						'processed_on' => (string) ($order['processed_on'] ?? ''),
+						'status' => (string) ($order['status'] ?? ''),
+					]
+				);
 			}
 			$found_order = $this->find_order_by_external_reference(ExternalReference::from_string($reference));
 			if (! is_array($found_order) || $order_id !== trim((string) ($found_order['id'] ?? ''))) {
@@ -266,6 +275,7 @@ final class SapoAdminGateway implements SapoGateway
 				['order_cancel' => ['cancel_reason' => 'other']]
 			);
 			ResponseValidator::object($cancelled['order'] ?? null, 'order contract cancel');
+			$order_id = '';
 
 			return [
 				'order_id' => $order_id,
@@ -280,6 +290,13 @@ final class SapoAdminGateway implements SapoGateway
 				],
 			];
 		} finally {
+			if ('' !== $order_id) {
+				try {
+					$this->cancel_order($order_id, 'other');
+				} catch (\Throwable $exception) {
+					// Contract cleanup must not hide the actual verification failure.
+				}
+			}
 			if ('' !== $customer_id) {
 				try {
 					$this->delete_customer($customer_id);
