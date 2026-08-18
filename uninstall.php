@@ -11,7 +11,7 @@
 
 defined('WP_UNINSTALL_PLUGIN') || exit;
 
-/* phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Deletion is limited to plugin-owned tables/options/meta during uninstall; identifiers are built from the trusted WordPress prefix. */
+/* phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Deletion is limited to plugin-owned tables/options/meta during uninstall; identifiers are built from the trusted WordPress prefix and the meta-key placeholders are generated with matching arguments at runtime. */
 
 $woo_sapo_option_names = [
 	'woo_sapo_sync_connection',
