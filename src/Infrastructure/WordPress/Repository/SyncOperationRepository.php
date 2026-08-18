@@ -191,4 +191,23 @@ final class SyncOperationRepository
 			OperationStatus::RETRY
 		));
 	}
+
+	/**
+	 * Remove terminal outbox rows after their audit window. Pending, retrying and
+	 * processing operations are never pruned by maintenance.
+	 */
+	public function prune(int $completed_days = 90, int $failed_days = 180): int
+	{
+		$completed_cutoff = gmdate('Y-m-d H:i:s', time() - (max(1, $completed_days) * DAY_IN_SECONDS));
+		$failed_cutoff = gmdate('Y-m-d H:i:s', time() - (max(1, $failed_days) * DAY_IN_SECONDS));
+
+		return (int) $this->wpdb->query($this->wpdb->prepare(
+			"DELETE FROM {$this->table} WHERE (status = %s AND completed_at IS NOT NULL AND completed_at < %s) OR (status IN (%s, %s) AND updated_at < %s)",
+			OperationStatus::COMPLETED,
+			$completed_cutoff,
+			OperationStatus::NEEDS_REVIEW,
+			OperationStatus::CANCELLED,
+			$failed_cutoff
+		));
+	}
 }

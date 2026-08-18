@@ -163,4 +163,22 @@ final class EventInboxRepository
 
 		return array_values(array_filter(array_map('strval', (array) $rows)));
 	}
+
+	/**
+	 * Remove terminal events after their audit window while preserving retries and
+	 * in-flight rows. The daily caller supplies the retention policy centrally.
+	 */
+	public function prune(int $processed_days = 30, int $failed_days = 90): int
+	{
+		$processed_cutoff = gmdate('Y-m-d H:i:s', time() - (max(1, $processed_days) * DAY_IN_SECONDS));
+		$failed_cutoff = gmdate('Y-m-d H:i:s', time() - (max(1, $failed_days) * DAY_IN_SECONDS));
+
+		return (int) $this->wpdb->query($this->wpdb->prepare(
+			"DELETE FROM {$this->table} WHERE (status = %s AND processed_at IS NOT NULL AND processed_at < %s) OR (status = %s AND received_at < %s)",
+			'PROCESSED',
+			$processed_cutoff,
+			'FAILED',
+			$failed_cutoff
+		));
+	}
 }

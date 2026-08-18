@@ -16,6 +16,7 @@ use WooSapoSync\Infrastructure\WordPress\Repository\EventInboxRepository;
 use WooSapoSync\Infrastructure\WordPress\Repository\SyncOperationRepository;
 use WooSapoSync\Infrastructure\WordPress\SyncLogger;
 use WooSapoSync\Infrastructure\WordPress\ActionScheduler\Queue;
+use WooSapoSync\Infrastructure\WordPress\Scheduler;
 
 defined('ABSPATH') || exit;
 
@@ -147,6 +148,16 @@ final class SapoEventWorker
 
 	public function requeue_due(): void
 	{
+		if (Scheduler::maintenance_due()) {
+			$events_pruned = $this->events->prune();
+			$operations_pruned = $this->operations->prune();
+			Scheduler::mark_maintenance_run();
+			SyncLogger::log('info', 'Sync maintenance completed.', [
+				'events_pruned' => $events_pruned,
+				'operations_pruned' => $operations_pruned,
+			]);
+		}
+
 		foreach ($this->events->due_keys(100) as $event_key) {
 			Queue::enqueue_event($event_key);
 		}

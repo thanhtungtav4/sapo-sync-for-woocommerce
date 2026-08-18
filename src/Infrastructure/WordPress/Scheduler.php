@@ -21,6 +21,8 @@ final class Scheduler
 
 	public const EXTERNAL_MAPPING_LAST_OPTION = 'woo_sapo_sync_external_mapping_last';
 
+	public const MAINTENANCE_LAST_OPTION = 'woo_sapo_sync_maintenance_last';
+
 	private const GROUP = 'sapo-sync-for-woocommerce';
 
 	/** Webhooks trigger an immediate run; this is the inventory safety net. */
@@ -114,5 +116,17 @@ final class Scheduler
 	public static function mark_external_mapping_run(): void
 	{
 		update_option(self::EXTERNAL_MAPPING_LAST_OPTION, time(), false);
+	}
+
+	public static function maintenance_due(): bool
+	{
+		$last = (int) get_option(self::MAINTENANCE_LAST_OPTION, 0);
+
+		return $last <= (time() - self::DAILY_INTERVAL);
+	}
+
+	public static function mark_maintenance_run(): void
+	{
+		update_option(self::MAINTENANCE_LAST_OPTION, time(), false);
 	}
 }
