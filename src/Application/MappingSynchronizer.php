@@ -63,6 +63,10 @@ final class MappingSynchronizer
 				// Price policy is an operator decision and survives a mapping refresh.
 				$result['price_source'] = (string) ($existing['price_source'] ?? 'WOO');
 				$result['sapo_price_list_id'] = $existing['sapo_price_list_id'] ?? null;
+				// Operational timestamps are owned by the verification/inventory jobs;
+				// a catalog refresh must not erase their audit trail.
+				$result['last_verified_at'] = $existing['last_verified_at'] ?? null;
+				$result['last_inventory_sync_at'] = $existing['last_inventory_sync_at'] ?? null;
 			}
 			if (MappingStatus::ACTIVE !== ($result['mapping_status'] ?? '') && is_array($existing)) {
 				// A changed/ambiguous SKU must not erase the last known Sapo IDs.
